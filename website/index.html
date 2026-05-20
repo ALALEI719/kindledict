@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KindleDict — Custom Kindle Dictionaries for Every Book You Read</title>
+  <meta name="description" content="Build a Kindle fictionary in minutes. Look up character names, places, and book-specific terms while reading — right inside your Kindle dictionary popup. No more 'word not found'."/>
+  <meta name="keywords" content="fictionary, custom kindle dictionary, kindle word not found, book glossary kindle, companion dictionary, fantasy reading dictionary"/>
+  <link rel="canonical" href="https://kindledict.com/"/>
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="KindleDict — Custom Kindle Dictionaries for Every Book"/>
+  <meta property="og:description" content="Turn any book into a tap-to-define Kindle dictionary. Character names, lore, and hard words — looked up without leaving the page."/>
+  <meta property="og:type" content="website"/>
+
+  <!-- FAQ Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Why doesn't my Kindle dictionary find character names?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Built-in Kindle dictionaries only cover standard English. Character names, fictional places, and book-specific terms are not included — so lookup returns no result. KindleDict builds a custom dictionary from your book so those words resolve when you tap them."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is a fictionary?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A fictionary is a custom Kindle dictionary made for a specific fiction book. It works like a normal dictionary during reading: press and hold a word, and the definition appears in the popup — but the entries are about that book's characters, places, and terms."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Will this work on my Kindle device?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. KindleDict exports a standard .mobi dictionary file. Sideload it to your Kindle, set it as your default dictionary, and tap-to-define works on Kindle e-readers including Paperwhite, Oasis, and Scribe."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need to flip to the back-of-book glossary?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Unlike a static glossary at the end of a book, a KindleDict fictionary integrates with Kindle's built-in lookup. You stay on the same page, same sentence — just tap the word."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --surface: #ffffff;
+      --text: #1a1a1a;
+      --muted: #5c5c5c;
+      --accent: #c45c26;
+      --accent-dark: #9a4518;
+      --border: #e8e4df;
+      --green: #2d6a4f;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,.06);
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+      --serif: Georgia, "Times New Roman", serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Nav */
+    nav {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-size: .95rem;
+      text-decoration: none;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: .95rem;
+      text-decoration: none;
+      transition: background .2s, transform .1s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dark);
+      text-decoration: none;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(196, 92, 38, .08);
+      text-decoration: none;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 72px 0 56px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(196, 92, 38, .1);
+      color: var(--accent-dark);
+      font-size: .85rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 5vw, 3rem);
+      line-height: 1.2;
+      max-width: 780px;
+      margin: 0 auto 20px;
+      font-weight: 700;
+    }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 620px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .hero-visual {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 28px 32px;
+      text-align: left;
+    }
+
+    .hero-visual-label {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .lookup-demo {
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      line-height: 1.8;
+      position: relative;
+    }
+
+    .lookup-word {
+      background: rgba(196, 92, 38, .15);
+      border-bottom: 2px dotted var(--accent);
+      cursor: default;
+    }
+
+    .lookup-popup {
+      margin-top: 16px;
+      background: #f5f3f0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-family: var(--font);
+      font-size: .9rem;
+    }
+
+    .lookup-popup strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .lookup-popup .tag {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    /* Sections */
+    section { padding: 64px 0; }
+
+    section h2 {
+      font-family: var(--serif);
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .section-sub {
+      text-align: center;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 40px;
+    }
+
+    /* Pain */
+    .pain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .pain-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+
+    .pain-card .icon {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+    }
+
+    .pain-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .pain-card p {
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    /* How it works */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 32px;
+      counter-reset: step;
+    }
+
+    .step {
+      text-align: center;
+      counter-increment: step;
+    }
+
+    .step-num {
+      width: 48px;
+      height: 48px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin: 0 auto 16px;
+    }
+
+    .step h3 {
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    /* Features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .feature {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 24px;
+      border: 1px solid var(--border);
+    }
+
+    .feature h3 {
+      font-size: 1rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature p {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .check { color: var(--green); font-weight: 700; }
+
+    /* Compare */
+    .compare {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .compare table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .95rem;
+    }
+
+    .compare th,
+    .compare td {
+      padding: 16px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare th {
+      background: #f5f3f0;
+      font-weight: 600;
+    }
+
+    .compare tr:last-child td { border-bottom: none; }
+
+    .yes { color: var(--green); font-weight: 600; }
+    .no { color: #b33; }
+
+    /* FAQ */
+    .faq-list {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+
+    .faq-item h3 {
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+
+    .faq-item p {
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    /* CTA */
+    .cta-band {
+      background: var(--text);
+      color: #fff;
+      padding: 64px 24px;
+      text-align: center;
+      border-radius: var(--radius);
+      margin: 0 24px 64px;
+      max-width: 1032px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-band h2 {
+      color: #fff;
+      font-family: var(--serif);
+      margin-bottom: 12px;
+    }
+
+    .cta-band p {
+      color: rgba(255,255,255,.75);
+      margin-bottom: 28px;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-band .btn-primary {
+      background: var(--accent);
+      font-size: 1rem;
+      padding: 14px 32px;
+    }
+
+    /* Footer */
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    footer a { color: var(--muted); }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hero { padding-top: 48px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container nav-inner">
+      <a href="/" class="logo">Kindle<span>Dict</span></a>
+      <div class="nav-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#faq">FAQ</a>
+        <a href="#try" class="btn btn-primary">Try free</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero container">
+    <div class="hero-badge">Custom Kindle fictionaries — not just another ebook</div>
+    <h1>Look up any word in your book — even when Kindle says “not found”</h1>
+    <p class="hero-sub">
+      KindleDict builds a <strong>custom Kindle dictionary</strong> from the book you're reading.
+      Tap character names, places, and lore terms and get definitions right in the dictionary popup — without flipping to a glossary.
+    </p>
+    <div class="hero-cta">
+      <a href="#try" class="btn btn-primary">Build your fictionary — free</a>
+      <a href="#how-it-works" class="btn btn-secondary">See how it works</a>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-visual-label">While reading on Kindle</div>
+      <div class="lookup-demo">
+        …traveling north with <span class="lookup-word">Yoren</span> toward the Wall, Arya kept her hand on <span class="lookup-word">Needle</span>…
+      </div>
+      <div class="lookup-popup">
+        <strong>Yoren</strong>
+        <div class="tag">Character · A Clash of Kings, Ch. 4</div>
+        Black brother of the Night's Watch who recruits from the dungeons. Currently transporting men and boys to the Wall, including Arya in disguise.
+      </div>
+    </div>
+  </header>
+
+  <section id="problem">
+    <div class="container">
+      <h2>Your Kindle dictionary wasn't built for fiction</h2>
+      <p class="section-sub">
+        Built-in dictionaries work for standard English. They fail on the words that actually slow you down.
+      </p>
+      <div class="pain-grid">
+        <div class="pain-card">
+          <div class="icon">❌</div>
+          <h3>“Word not found”</h3>
+          <p>Press and hold a character name — Kindle returns nothing. You lose the thread of the story.</p>
+        </div>
+        <div class="pain-card">
+          <div class="icon">📖</div>
+          <h3>Back-of-book glossaries break flow</h3>
+          <p>Some editions include a glossary, but you have to leave the page, search manually, and hope the term is listed.</p>
+        </div>
+        <div class="pain-card">
+          <div class="icon">🧠</div>
+          <h3>Too many names to track</h3>
+          <p>Epic fantasy, sci-fi, and literary fiction pile on people, places, and invented terms faster than memory allows.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how-it-works">
+    <div class="container">
+      <h2>From book to Kindle dictionary in four steps</h2>
+      <p class="section-sub">Not a PDF. Not a separate ebook. A real dictionary your Kindle uses when you tap a word.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Upload your book</h3>
+          <p>Add an EPUB or paste a chapter. We scan for names, places, and terms readers actually look up.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>AI builds entries</h3>
+          <p>Each entry includes context-aware definitions, alternate forms (nicknames, possessives), and spoiler-safe scope.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Download .mobi</h3>
+          <p>We compile a Kindle-compatible dictionary file — the same format used by fan-made fictionaries for decades.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>Read and tap</h3>
+          <p>Sideload to your Kindle, set as default dictionary, and look up words without leaving the page.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="container">
+      <h2>Built for how Kindle lookup actually works</h2>
+      <p class="section-sub">Every feature exists because standard dictionaries miss it.</p>
+      <div class="features-grid">
+        <div class="feature">
+          <h3><span class="check">✓</span> True dictionary integration</h3>
+          <p>Works in Kindle's tap-to-define popup — not a side-loaded book you have to open separately.</p>
+        </div>
+        <div class="feature">
+          <h3><span class="check">✓</span> Character names &amp; nicknames</h3>
+          <p>“Arya”, “Arry”, “Yoren's” — alternate forms indexed so single-word lookup hits the right entry.</p>
+        </div>
+        <div class="feature">
+          <h3><span class="check">✓</span> Places, lore &amp; invented terms</h3>
+          <p>Valyrian steel, the Wall, sourleaf — book-specific vocabulary built-in dictionaries ignore.</p>
+        </div>
+        <div class="feature">
+          <h3><span class="check">✓</span> Spoiler-aware by chapter</h3>
+          <p>Definitions only use what you've read so far. No future plot points leaking into early chapters.</p>
+        </div>
+        <div class="feature">
+          <h3><span class="check">✓</span> Falls back gracefully</h3>
+          <p>Words not in your fictionary still query your regular dictionaries. Best of both worlds.</p>
+        </div>
+        <div class="feature">
+          <h3><span class="check">✓</span> Rare English words too</h3>
+          <p>Courser, fettered, squalid — vocabulary that's real English but too obscure for quick reading.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <div class="container">
+      <h2>KindleDict vs. everything else</h2>
+      <p class="section-sub">Why a custom fictionary beats the workarounds.</p>
+      <div class="compare">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>KindleDict</th>
+              <th>Built-in dictionary</th>
+              <th>Back-of-book glossary</th>
+              <th>Kindle X-Ray</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Tap-to-define in popup</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Yes</td>
+              <td class="no">No</td>
+              <td class="no">No</td>
+            </tr>
+            <tr>
+              <td>Character &amp; place names</td>
+              <td class="yes">Yes</td>
+              <td class="no">No</td>
+              <td class="yes">Sometimes</td>
+              <td class="yes">Sometimes</td>
+            </tr>
+            <tr>
+              <td>Works on every book</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Yes</td>
+              <td class="no">Rare</td>
+              <td class="no">Limited titles</td>
+            </tr>
+            <tr>
+              <td>Stay on the same page</td>
+              <td class="yes">Yes</td>
+              <td class="yes">Yes</td>
+              <td class="no">No</td>
+              <td class="no">No</td>
+            </tr>
+            <tr>
+              <td>Custom per your edition</td>
+              <td class="yes">Yes</td>
+              <td class="no">No</td>
+              <td class="no">No</td>
+              <td class="no">No</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="audience">
+    <div class="container">
+      <h2>Made for readers who hit “word not found”</h2>
+      <p class="section-sub">If you've ever paused mid-chapter to Google a name, this is for you.</p>
+      <div class="pain-grid">
+        <div class="pain-card">
+          <h3>Fantasy &amp; sci-fi fans</h3>
+          <p>Dozens of houses, nicknames, and invented terms per book. Finally look them up like normal words.</p>
+        </div>
+        <div class="pain-card">
+          <h3>Literary &amp; historical fiction</h3>
+          <p>Archaic vocabulary and period-specific references — explained in context, not from a generic dictionary.</p>
+        </div>
+        <div class="pain-card">
+          <h3>English learners reading originals</h3>
+          <p>When the hard word is also a proper noun or book-specific term, standard learner dictionaries won't help.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="container">
+      <h2>Frequently asked questions</h2>
+      <div class="faq-list">
+        <div class="faq-item">
+          <h3>What is a fictionary?</h3>
+          <p>
+            A fictionary is a custom Kindle dictionary built for one book (or series).
+            It behaves like a normal dictionary during reading — press and hold a word, see the definition —
+            but the entries describe that book's characters, places, and terms instead of standard English.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>Why doesn't my Kindle find character names?</h3>
+          <p>
+            Built-in dictionaries only include general vocabulary. Fictional names, locations, and invented words
+            are not in Oxford, Merriam-Webster, or any stock Kindle dictionary — so lookup fails.
+            KindleDict fills that gap with a book-specific dictionary file.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>Is this just another ebook?</h3>
+          <p>
+            No. A regular MOBI ebook cannot replace your dictionary. KindleDict exports a
+            <strong>dictionary-indexed .mobi</strong> with special metadata and lookup tags.
+            Your Kindle recognizes it as a dictionary and uses it in the tap-to-define popup.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>Which Kindle devices are supported?</h3>
+          <p>
+            Any Kindle e-reader that supports custom dictionaries — including Paperwhite, Oasis, and Scribe.
+            Sideload the .mobi file, then set it as your default dictionary under Settings → Language &amp; Dictionaries.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>What file formats can I upload?</h3>
+          <p>
+            DRM-free EPUB and pasted chapter text. We do not support DRM-protected Kindle (AZW/KFX) files.
+            You must own the legal right to the content you upload.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>What happens to words not in my fictionary?</h3>
+          <p>
+            Kindle searches your fictionary first, then falls back to your other installed dictionaries.
+            You keep normal English lookup for everything your custom dictionary doesn't cover.
+          </p>
+        </div>
+        <div class="faq-item">
+          <h3>Is my book uploaded to your servers?</h3>
+          <p>
+            Files are processed to generate your dictionary and deleted after a short retention window.
+            We do not use your books to train AI models. See our privacy policy for details.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-band" id="try">
+    <h2>Stop flipping to the glossary. Start tapping.</h2>
+    <p>Upload a chapter free. Download a Kindle-ready fictionary in minutes.</p>
+    <a href="#" class="btn btn-primary">Get started — it's free</a>
+    <p style="margin-top:16px;font-size:.85rem;">No credit card · DRM-free EPUB or paste text · Personal use</p>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>© 2026 KindleDict · Custom Kindle dictionaries &amp; fictionaries for serious readers</p>
+      <p style="margin-top:8px;">
+        <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Contact</a>
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

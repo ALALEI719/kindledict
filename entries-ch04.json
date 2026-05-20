@@ -1,0 +1,349 @@
+{
+  "entries": [
+    {
+      "word": "Arya Stark",
+      "definition": "Young Stark daughter, now disguised as an orphan boy 'Arry' while traveling with Yoren's group to the Wall. Formerly called 'Arya Horseface' and 'Lumpyhead' by other children.",
+      "category": "Character",
+      "inflections": ["Arya", "Arry", "Lumpyhead", "Lumpyface"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Yoren",
+      "definition": "Black brother of the Night's Watch who recruits from the dungeons. Currently transporting men and boys to the Wall, including Arya in disguise.",
+      "category": "Character",
+      "inflections": ["Yoren's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Needle",
+      "definition": "Arya's castle-forged steel sword, given to her by Jon Snow. A slender blade suitable for her water dancer training.",
+      "category": "Artifact",
+      "inflections": ["Needle's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Hot Pie",
+      "definition": "Orphan boy, former baker's apprentice who lost his mother. Fat, sunburned, with straw-colored hair. Killed a boy by kicking him and now travels with Yoren's group.",
+      "category": "Character",
+      "inflections": ["Hot Pie's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Lommy Greenhands",
+      "definition": "Orphan boy who stole before being caught. His arms are mottled green to the elbow from his work as a dyer's apprentice. Named Arya 'Lumpyhead'.",
+      "category": "Character",
+      "inflections": ["Lommy"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Bull",
+      "definition": "Older orphan boy with shaggy black hair, big for his age with a broad chest. Wears a horned helm he polishes constantly but never wears. Protective of Arya.",
+      "category": "Character",
+      "inflections": ["Bull's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Winterfell",
+      "definition": "Arya's ancestral home, the Stark seat in the North. She wishes to return there instead of continuing to the Wall.",
+      "category": "Place",
+      "inflections": ["Winterfell's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "King's Landing",
+      "definition": "The capital city where Arya's father was executed. She left disguised as a boy, not looking back except wishing it would wash away.",
+      "category": "Place",
+      "inflections": ["King's Landing's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Wall",
+      "definition": "Ancient ice fortress where the Night's Watch serves. Yoren is transporting recruits there.",
+      "category": "Place",
+      "inflections": ["Wall"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Night's Watch",
+      "definition": "Order of black-cloaked guardians holding the Wall. Yoren recruits men from the dungeons to join them.",
+      "category": "Organization",
+      "inflections": ["Watch"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Lord Eddard",
+      "definition": "Arya's father, Lord of Winterfell, who was executed in King's Landing. Yoren was supposed to take him to the Wall before something 'went queer'.",
+      "category": "Character",
+      "inflections": ["Eddard", "Ned", "Lord Eddard's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Jon Snow",
+      "definition": "Arya's half-brother (bastard son of Lord Eddard). He gave Arya her sword Needle. Arya wishes to meet him at the Wall.",
+      "category": "Character",
+      "inflections": ["Snow", "Jon's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Queen",
+      "definition": "The queen of King's Landing, who was looking for Arya after her father's death. Lannister guardsmen serve her.",
+      "category": "Character",
+      "inflections": ["Queen's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Prince Joffrey",
+      "definition": "The prince whom Arya blames for her father's death. She wishes to see him punished.",
+      "category": "Character",
+      "inflections": ["Joffrey", "Joffrey's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Sansa",
+      "definition": "Arya's elder sister, still trapped in King's Landing. Arya worries about her fate.",
+      "category": "Character",
+      "inflections": ["Sansa's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Robb",
+      "definition": "Arya's elder brother, whom she hopes to see again if she returns to Winterfell.",
+      "category": "Character",
+      "inflections": ["Robb's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Bran",
+      "definition": "Arya's younger brother at Winterfell, whom she hopes to see again.",
+      "category": "Character",
+      "inflections": ["Bran's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Rickon",
+      "definition": "Arya's youngest brother at Winterfell.",
+      "category": "Character",
+      "inflections": ["Rickon's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Red Comet",
+      "definition": "A blood-red comet crossing the sky, which Arya sees as resembling her father's greatsword Ice after execution. Called 'The Red Sword' by the Bull.",
+      "category": "LoreTerm",
+      "inflections": ["Comet"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Valyrian steel",
+      "definition": "Legendary ripply metal of ancient Valyria. Arya's father's greatsword Ice was made of this rare material.",
+      "category": "LoreTerm",
+      "inflections": ["Valyrian"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Ice",
+      "definition": "Lord Eddard's ancient Stark greatsword made of Valyrian steel. Executed with it after his capture. Arya sees the red comet as resembling it.",
+      "category": "Artifact",
+      "inflections": ["Ice's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Ser Ilyn",
+      "definition": "The King's Justice who executed Lord Eddard by cutting off his head in King's Landing.",
+      "category": "Character",
+      "inflections": ["Ilyn", "Ser Ilyn's"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The King's Justice",
+      "definition": "Royal executioner position. Ser Ilyn holds this title.",
+      "category": "Title",
+      "inflections": ["King's Justice"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Water dancer's stance",
+      "definition": "Combat posture taught by Syrio Forel, Arya's dancing master in King's Landing. Used for agile sword fighting.",
+      "category": "LoreTerm",
+      "inflections": [],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Syrio Forel",
+      "definition": "Arya's water dancing sword instructor in King's Landing, who taught her the Braavosi fighting style.",
+      "category": "Character",
+      "inflections": ["Syrio"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Stark",
+      "definition": "Noble House of Winterfell, whose sigil is the direwolf. Arya identifies as 'a Stark of Winterfell'.",
+      "category": "House",
+      "inflections": ["Starks"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Direwolf",
+      "definition": "Ancient wolf symbol of House Stark. Arya reminds herself that 'direwolves don't cry' to endure punishment.",
+      "category": "LoreTerm",
+      "inflections": ["direwolves"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Sourleaf",
+      "definition": "Tobacco-like leaf chewed by Northmen. Yoren gave Arya some to help with the sting of his whipping; it tastes foul.",
+      "category": "Vocabulary",
+      "inflections": [],
+      "chapter_id": "ak-ch04",
+      "notes": "Westerosi tobacco variant"
+    },
+    {
+      "word": "Black brother",
+      "definition": "Term for members of the Night's Watch, who wear black cloaks. Yoren is referred to as one.",
+      "category": "LoreTerm",
+      "inflections": ["black brothers"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Flea Bottom",
+      "definition": " poorest district of King's Landing, mentioned in Arya's thoughts about the city.",
+      "category": "Place",
+      "inflections": [],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Red Keep",
+      "definition": "Royal castle in King's Landing where the Iron Throne is located.",
+      "category": "Place",
+      "inflections": [],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Great Sept",
+      "definition": "Major sept (temple) in King's Landing where Arya's father was executed.",
+      "category": "Place",
+      "inflections": [],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The sept",
+      "definition": "Temple of the Seven Gods. Arya remembers the paving stones near the sept where her father died.",
+      "category": "Place",
+      "inflections": ["septs"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The kingsroad",
+      "definition": "Ancient road connecting King's Landing to Winterfell and continuing to the Wall.",
+      "category": "Place",
+      "inflections": [],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Mountains of the Moon",
+      "definition": "Mountain range in the Vale, home to wild men who raid the countryside.",
+      "category": "Place",
+      "inflections": ["Mountains"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Riverlands",
+      "definition": "Central realm of the Seven Kingdoms, through which the kingsroad passes.",
+      "category": "Place",
+      "inflections": [],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Vale",
+      "definition": "Mountainous realm ruled by House Arryn, protected by the Mountains of the Moon.",
+      "category": "Place",
+      "inflections": [],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The North",
+      "definition": "Northern realm of the Seven Kingdoms, home to Winterfell and House Stark.",
+      "category": "Place",
+      "inflections": ["Northmen"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "The Seven Kingdoms",
+      "definition": "The unified realm of Westeros, comprising multiple regions and houses.",
+      "category": "Place",
+      "inflections": ["Seven Kingdoms"],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Castle-forged steel",
+      "definition": "High-quality steel forged in a castle smithy, superior to common iron. Needle is made of this material.",
+      "category": "LoreTerm",
+      "inflections": [],
+      "chapter_id": "ak-ch04"
+    },
+    {
+      "word": "Courser",
+      "definition": "Warhorse of medium size, finer than a plow horse. Yoren bought coursers for the boys.",
+      "category": "Vocabulary",
+      "inflections": ["coursers"],
+      "chapter_id": "ak-ch04",
+      "synonyms": "warhorse, riding horse"
+    },
+    {
+      "word": "Fettered",
+      "definition": "Bound with chains or shackles, typically on hands and feet. The worst prisoners were kept fettered in Yoren's wagon.",
+      "category": "Vocabulary",
+      "inflections": ["fettering", "fettered"],
+      "chapter_id": "ak-ch04",
+      "synonyms": "chained, shackled"
+    },
+    {
+      "word": "Brayed",
+      "definition": "Laughed or spoke loudly and harshly, like a donkey's cry. Lommy brayed when he laughed.",
+      "category": "Vocabulary",
+      "inflections": ["braying", "brays"],
+      "chapter_id": "ak-ch04",
+      "synonyms": "baulked, shouted harshly"
+    },
+    {
+      "word": "Sullenly",
+      "definition": "In a gloomy, resentful, and silent manner. Arya chewed her lip sullenly when mocked.",
+      "category": "Vocabulary",
+      "inflections": [],
+      "chapter_id": "ak-ch04",
+      "synonyms": "gloomily, resentfully"
+    },
+    {
+      "word": "Hawed",
+      "definition": "Moved sideways or shied, as a horse does when startled. Hot Pie's donkey hawed and bucked when struck.",
+      "category": "Vocabulary",
+      "inflections": ["hawing"],
+      "chapter_id": "ak-ch04",
+      "synonyms": "shied, veered"
+    },
+    {
+      "word": "Vaulted",
+      "definition": "Jumped or leaped with agility. Arya vaulted off her donkey to defend herself.",
+      "category": "Vocabulary",
+      "inflections": ["vaulting"],
+      "chapter_id": "ak-ch04",
+      "synonyms": "leaped, sprang"
+    },
+    {
+      "word": "Dribbled",
+      "definition": "Flowing or falling in drops. Blood dribbled from Hot Pie's broken nose.",
+      "category": "Vocabulary",
+      "inflections": ["dribbling", "dribbles"],
+      "chapter_id": "ak-ch04",
+      "synonyms": "drooled, trickled"
+    },
+    {
+      "word": "Squalid",
+      "definition": "Dirty and sordid; bleak. (Note: This word appears in narration describing conditions.)",
+      "category": "Vocabulary",
+      "inflections": [],
+      "chapter_id": "ak-ch04",
+      "synonyms": "filthy, wretched"
+    }
+  ]
+}
