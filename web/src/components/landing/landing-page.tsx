@@ -388,8 +388,9 @@ export function LandingPage() {
             for serious readers
           </p>
           <p className="footer-links">
-            <a href="#">Privacy</a> · <a href="#">Terms</a> ·{" "}
-            <a href="#">Contact</a>
+            <Link href="/privacy">Privacy</Link> ·{" "}
+            <Link href="/terms">Terms</Link> ·{" "}
+            <Link href="/contact">Contact</Link>
           </p>
         </div>
       </footer>

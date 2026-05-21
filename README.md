@@ -16,9 +16,12 @@ KindleDict/
 ## Phase 1 (current): Vercel web app
 
 - Landing page at `/`
-- Dictionary builder at `/app`
-- APIs: `/api/extract`, `/api/build`, `/api/generate`
+- Dictionary builder at `/app` — **paste chapter or upload DRM-free EPUB**
+- APIs: `/api/extract`, `/api/build`, `/api/generate`, `/api/parse-epub`, `/api/health`
 - Downloads Kindle source ZIP (open `dict.opf` in Kindle Previewer → export `.mobi`)
+- Sample chapter button for demo (`/samples/acok-ch04.txt`)
+
+See [MVP.md](./MVP.md) for launch checklist.
 
 ## Phase 2: Railway worker
 
@@ -49,13 +52,13 @@ vercel link
 
 Choose scope: **alalei719s-projects**
 
-Project name suggestion: `kindledict`
+Project name: **kindledict** (production URL: `https://kindledict.vercel.app` after rename)
 
 Set **Root Directory** to `web` if linking from repo root in Vercel dashboard.
 
 ### 3. Environment variables
 
-In [Vercel Dashboard](https://vercel.com/alalei719s-projects) → Project → Settings → Environment Variables:
+In [Vercel Dashboard](https://vercel.com/alalei719s-projects/kindledict) → Project → Settings → Environment Variables:
 
 | Variable | Required | Notes |
 |----------|----------|-------|
@@ -98,7 +101,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000
+Open https://kindledict.vercel.app or http://localhost:3000
 
 ## Important notes
 

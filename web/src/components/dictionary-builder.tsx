@@ -1,10 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { DictionaryEntry } from "@/lib/types";
 
+import "@/components/landing/landing.css";
+
 type Step = "form" | "preview";
+type InputMode = "paste" | "epub";
+
+interface EpubChapterOption {
+  id: string;
+  label: string;
+  text: string;
+}
 
 function slugify(value: string): string {
   return value
@@ -15,24 +25,131 @@ function slugify(value: string): string {
 
 export function DictionaryBuilder() {
   const [step, setStep] = useState<Step>("form");
+  const [inputMode, setInputMode] = useState<InputMode>("paste");
   const [bookTitle, setBookTitle] = useState("");
   const [chapterLabel, setChapterLabel] = useState("");
   const [chapterId, setChapterId] = useState("ch01");
   const [chapterText, setChapterText] = useState("");
   const [entries, setEntries] = useState<DictionaryEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [downloadFormat, setDownloadFormat] = useState<"zip" | "mobi" | null>(
     null,
   );
+  const [serviceReady, setServiceReady] = useState<boolean | null>(null);
+  const [mobiCompileReady, setMobiCompileReady] = useState(false);
+
+  const [epubFileName, setEpubFileName] = useState<string | null>(null);
+  const [epubChapters, setEpubChapters] = useState<EpubChapterOption[]>([]);
+  const [selectedChapterId, setSelectedChapterId] = useState("");
 
   const entryCountLabel = useMemo(() => {
     if (entries.length === 0) return "";
     return `${entries.length} entries ready`;
   }, [entries.length]);
 
-  async function handleExtract() {
+  const canSubmit = chapterText.trim().length >= 100;
+
+  const checkHealth = useCallback(async () => {
+    try {
+      const response = await fetch("/api/health");
+      const data = await response.json();
+      setServiceReady(Boolean(data.ready));
+      setMobiCompileReady(Boolean(data.features?.mobiCompile));
+    } catch {
+      setServiceReady(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkHealth();
+  }, [checkHealth]);
+
+  function applyChapter(chapter: EpubChapterOption, title?: string) {
+    setChapterText(chapter.text);
+    setChapterId(chapter.id);
+    setChapterLabel(chapter.label);
+    if (title) setBookTitle(title);
+  }
+
+  async function handleLoadSample() {
+    setError(null);
     setLoading(true);
+    setLoadingMessage("Loading sample chapter…");
+
+    try {
+      const response = await fetch("/samples/acok-ch04.txt");
+      if (!response.ok) throw new Error("Could not load sample chapter.");
+      const text = await response.text();
+      setBookTitle("A Clash of Kings");
+      setChapterLabel("Chapter 4 (Arya IV)");
+      setChapterId("ak-ch04");
+      setChapterText(text);
+      setInputMode("paste");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load sample.");
+    } finally {
+      setLoading(false);
+      setLoadingMessage("");
+    }
+  }
+
+  async function handleEpubUpload(file: File) {
+    setError(null);
+    setLoading(true);
+    setLoadingMessage("Reading EPUB…");
+    setEpubFileName(file.name);
+    setEpubChapters([]);
+    setSelectedChapterId("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/parse-epub", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || "EPUB parsing failed.");
+      }
+
+      const chapters: EpubChapterOption[] = data.chapterTexts;
+      setEpubChapters(chapters);
+      if (data.title) setBookTitle(data.title);
+
+      const first = chapters[0];
+      if (first) {
+        setSelectedChapterId(first.id);
+        applyChapter(first, data.title);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to parse EPUB.");
+      setEpubFileName(null);
+    } finally {
+      setLoading(false);
+      setLoadingMessage("");
+    }
+  }
+
+  function handleChapterSelect(chapterId: string) {
+    setSelectedChapterId(chapterId);
+    const chapter = epubChapters.find((item) => item.id === chapterId);
+    if (chapter) applyChapter(chapter);
+  }
+
+  async function handleExtract() {
+    if (!serviceReady) {
+      setError(
+        "AI extraction is not configured yet. Ask the site owner to add OPENAI_API_KEY on Vercel.",
+      );
+      return;
+    }
+
+    setLoading(true);
+    setLoadingMessage("AI is reading your chapter and picking lookup terms…");
     setError(null);
 
     try {
@@ -58,11 +175,22 @@ export function DictionaryBuilder() {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);
+      setLoadingMessage("");
     }
   }
 
   async function handleGenerate() {
+    if (!serviceReady) {
+      setError(
+        "AI extraction is not configured yet. Ask the site owner to add OPENAI_API_KEY on Vercel.",
+      );
+      return;
+    }
+
     setLoading(true);
+    setLoadingMessage(
+      "Generating dictionary — this may take 1–2 minutes for a long chapter…",
+    );
     setError(null);
     setDownloadFormat(null);
 
@@ -96,15 +224,21 @@ export function DictionaryBuilder() {
       anchor.click();
       URL.revokeObjectURL(url);
       setDownloadFormat(format);
+
+      if (step === "form" && entries.length === 0) {
+        setStep("preview");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);
+      setLoadingMessage("");
     }
   }
 
   async function handleDownloadZipFromPreview() {
     setLoading(true);
+    setLoadingMessage("Packaging dictionary files…");
     setError(null);
 
     try {
@@ -138,187 +272,274 @@ export function DictionaryBuilder() {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);
+      setLoadingMessage("");
     }
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10">
-      <div className="mb-8">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--accent-dark)]">
-          Kindle fictionary builder
-        </p>
-        <h1 className="font-serif text-3xl font-bold text-[var(--text)] sm:text-4xl">
-          Turn a chapter into a Kindle dictionary
-        </h1>
-        <p className="mt-3 max-w-2xl text-[var(--muted)]">
-          Paste one chapter. We extract names, places, and book-specific terms,
-          then package a Kindle-compatible dictionary you can sideload.
-        </p>
-      </div>
-
-      {error && (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          {error}
-        </div>
-      )}
-
-      {downloadFormat && (
-        <div className="mb-6 rounded-xl border border-[var(--green)]/30 bg-[#edf7f1] px-4 py-3 text-sm text-[var(--green)]">
-          {downloadFormat === "mobi"
-            ? "Downloaded .mobi file. Copy it to your Kindle documents/dictionaries/ folder."
-            : "Downloaded source ZIP. Open dict.opf in Kindle Previewer 3 and export as .mobi."}
-        </div>
-      )}
-
-      {step === "form" && (
-        <div className="space-y-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium">Book title</span>
-              <input
-                value={bookTitle}
-                onChange={(event) => setBookTitle(event.target.value)}
-                placeholder="A Clash of Kings"
-                className="w-full rounded-lg border border-[var(--border)] px-3 py-2"
-              />
-            </label>
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium">Chapter label</span>
-              <input
-                value={chapterLabel}
-                onChange={(event) => setChapterLabel(event.target.value)}
-                placeholder="Chapter 4 (Arya IV)"
-                className="w-full rounded-lg border border-[var(--border)] px-3 py-2"
-              />
-            </label>
+    <div className="landing builder-page">
+      <nav>
+        <div className="container nav-inner">
+          <Link href="/" className="logo">
+            Kindle<span>Dict</span>
+          </Link>
+          <div className="nav-links">
+            <Link href="/">Home</Link>
+            <Link href="/privacy">Privacy</Link>
           </div>
+        </div>
+      </nav>
 
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">Chapter id (optional)</span>
-            <input
-              value={chapterId}
-              onChange={(event) => setChapterId(event.target.value)}
-              placeholder="ak-ch04"
-              className="w-full rounded-lg border border-[var(--border)] px-3 py-2 sm:max-w-xs"
-            />
-          </label>
-
-          <label className="block text-sm">
-            <span className="mb-1 block font-medium">Chapter text</span>
-            <textarea
-              value={chapterText}
-              onChange={(event) => setChapterText(event.target.value)}
-              rows={14}
-              placeholder="Paste the full chapter text here..."
-              className="w-full rounded-lg border border-[var(--border)] px-3 py-2 font-serif leading-relaxed"
-            />
-          </label>
-
-          <p className="text-xs text-[var(--muted)]">
-            For personal study only. Use text you have the right to process. We
-            do not store your chapter after the request completes.
+      <main className="container builder-main">
+        <div className="builder-header">
+          <p className="hero-badge">MVP · Kindle fictionary builder</p>
+          <h1>Turn a chapter into a Kindle dictionary</h1>
+          <p className="hero-sub builder-sub">
+            Upload a DRM-free EPUB or paste chapter text. AI extracts names,
+            places, and book-specific terms, then packages a Kindle-compatible
+            dictionary you can sideload.
           </p>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              disabled={loading || chapterText.trim().length < 100}
-              onClick={handleExtract}
-              className="rounded-lg bg-[var(--accent)] px-5 py-2.5 font-semibold text-white hover:bg-[var(--accent-dark)] disabled:opacity-50"
-            >
-              {loading ? "Working..." : "Extract entries"}
-            </button>
-            <button
-              type="button"
-              disabled={loading || chapterText.trim().length < 100}
-              onClick={() => handleGenerate()}
-              className="rounded-lg border-2 border-[var(--accent)] px-5 py-2.5 font-semibold text-[var(--accent)] hover:bg-[rgba(196,92,38,0.08)] disabled:opacity-50"
-            >
-              {loading ? "Working..." : "One-click generate & download"}
-            </button>
-          </div>
         </div>
-      )}
 
-      {step === "preview" && (
-        <div className="space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold">Preview entries</h2>
-              <p className="text-sm text-[var(--muted)]">{entryCountLabel}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setStep("form")}
-              className="text-sm text-[var(--accent)] hover:underline"
-            >
-              Edit chapter
-            </button>
+        {serviceReady === false && (
+          <div className="builder-banner builder-banner-warn">
+            AI extraction is not live yet — <code>OPENAI_API_KEY</code> must be
+            set in Vercel. You can still load the sample chapter to explore the
+            UI, but generate will fail until the key is added.
           </div>
+        )}
 
-          <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-            <ul className="divide-y divide-[var(--border)]">
+        {serviceReady && !mobiCompileReady && (
+          <div className="builder-banner builder-banner-info">
+            Downloads are dictionary source ZIP files. Open{" "}
+            <code>dict.opf</code> in Kindle Previewer 3 to export{" "}
+            <code>.mobi</code>.
+          </div>
+        )}
+
+        {error && <div className="builder-banner builder-banner-error">{error}</div>}
+
+        {loading && loadingMessage && (
+          <div className="builder-banner builder-banner-info">{loadingMessage}</div>
+        )}
+
+        {downloadFormat && (
+          <div className="builder-banner builder-banner-success">
+            {downloadFormat === "mobi"
+              ? "Downloaded .mobi — copy to Kindle documents/dictionaries/"
+              : "Downloaded ZIP — open dict.opf in Kindle Previewer 3 → Export .mobi"}
+          </div>
+        )}
+
+        {step === "form" && (
+          <div className="builder-card">
+            <div className="builder-tabs">
+              <button
+                type="button"
+                className={inputMode === "paste" ? "builder-tab active" : "builder-tab"}
+                onClick={() => setInputMode("paste")}
+              >
+                Paste text
+              </button>
+              <button
+                type="button"
+                className={inputMode === "epub" ? "builder-tab active" : "builder-tab"}
+                onClick={() => setInputMode("epub")}
+              >
+                Upload EPUB
+              </button>
+            </div>
+
+            <div className="builder-grid">
+              <label className="builder-field">
+                <span>Book title</span>
+                <input
+                  value={bookTitle}
+                  onChange={(event) => setBookTitle(event.target.value)}
+                  placeholder="A Clash of Kings"
+                />
+              </label>
+              <label className="builder-field">
+                <span>Chapter label</span>
+                <input
+                  value={chapterLabel}
+                  onChange={(event) => setChapterLabel(event.target.value)}
+                  placeholder="Chapter 4 (Arya IV)"
+                />
+              </label>
+            </div>
+
+            <label className="builder-field">
+              <span>Chapter id (optional)</span>
+              <input
+                value={chapterId}
+                onChange={(event) => setChapterId(event.target.value)}
+                placeholder="ak-ch04"
+              />
+            </label>
+
+            {inputMode === "epub" ? (
+              <div className="builder-field">
+                <span>EPUB file (DRM-free, max 15 MB)</span>
+                <input
+                  type="file"
+                  accept=".epub,application/epub+zip"
+                  disabled={loading}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void handleEpubUpload(file);
+                  }}
+                />
+                {epubFileName && (
+                  <p className="builder-hint">Loaded: {epubFileName}</p>
+                )}
+                {epubChapters.length > 1 && (
+                  <label className="builder-field" style={{ marginTop: 12 }}>
+                    <span>Select chapter</span>
+                    <select
+                      value={selectedChapterId}
+                      onChange={(event) =>
+                        handleChapterSelect(event.target.value)
+                      }
+                    >
+                      {epubChapters.map((chapter) => (
+                        <option key={chapter.id} value={chapter.id}>
+                          {chapter.label} ({chapter.text.length.toLocaleString()}{" "}
+                          chars)
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
+            ) : (
+              <label className="builder-field">
+                <span>Chapter text</span>
+                <textarea
+                  value={chapterText}
+                  onChange={(event) => setChapterText(event.target.value)}
+                  rows={14}
+                  placeholder="Paste the full chapter text here…"
+                />
+              </label>
+            )}
+
+            <p className="builder-hint">
+              Personal study only. No DRM. Chapter text is sent to OpenAI for
+              extraction and not stored after processing.
+              {chapterText.length > 0 && (
+                <> · {chapterText.length.toLocaleString()} characters</>
+              )}
+            </p>
+
+            <div className="builder-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={loading}
+                onClick={handleLoadSample}
+              >
+                Try sample chapter
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={loading || !canSubmit}
+                onClick={handleExtract}
+              >
+                {loading ? "Working…" : "Preview entries"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={loading || !canSubmit}
+                onClick={handleGenerate}
+              >
+                {loading ? "Working…" : "Generate & download"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "preview" && (
+          <div className="builder-preview">
+            <div className="builder-preview-header">
+              <div>
+                <h2>Preview entries</h2>
+                <p className="builder-hint">{entryCountLabel}</p>
+              </div>
+              <button
+                type="button"
+                className="builder-link-btn"
+                onClick={() => setStep("form")}
+              >
+                Edit chapter
+              </button>
+            </div>
+
+            <ul className="builder-entry-list">
               {entries.map((entry) => (
-                <li key={entry.word} className="px-5 py-4">
-                  <div className="flex flex-wrap items-baseline gap-2">
+                <li key={entry.word}>
+                  <div className="builder-entry-head">
                     <strong>{entry.word}</strong>
-                    <span className="rounded-full bg-[rgba(196,92,38,0.12)] px-2 py-0.5 text-xs font-medium text-[var(--accent-dark)]">
-                      {entry.category}
-                    </span>
+                    <span className="builder-tag">{entry.category}</span>
                   </div>
-                  <p className="mt-1 text-sm text-[var(--muted)]">
-                    {entry.definition}
-                  </p>
+                  <p>{entry.definition}</p>
                   {entry.inflections && entry.inflections.length > 0 && (
-                    <p className="mt-1 text-xs text-[var(--muted)]">
+                    <p className="builder-hint">
                       Also: {entry.inflections.join(", ")}
                     </p>
                   )}
                 </li>
               ))}
             </ul>
-          </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleDownloadZipFromPreview}
-              className="rounded-lg bg-[var(--accent)] px-5 py-2.5 font-semibold text-white hover:bg-[var(--accent-dark)] disabled:opacity-50"
-            >
-              Download dictionary ZIP
-            </button>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => handleGenerate()}
-              className="rounded-lg border-2 border-[var(--accent)] px-5 py-2.5 font-semibold text-[var(--accent)] hover:bg-[rgba(196,92,38,0.08)] disabled:opacity-50"
-            >
-              Regenerate & download
-            </button>
+            <div className="builder-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={loading}
+                onClick={handleDownloadZipFromPreview}
+              >
+                Download dictionary ZIP
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={loading}
+                onClick={handleGenerate}
+              >
+                Regenerate & download
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <section className="mt-10 rounded-2xl border border-[var(--border)] bg-[#f5f3f0] p-6 text-sm text-[var(--muted)]">
-        <h3 className="mb-2 font-semibold text-[var(--text)]">
-          Install on Kindle
-        </h3>
-        <ol className="list-decimal space-y-1 pl-5">
-          <li>
-            If you downloaded a ZIP, open <code>dict.opf</code> in Kindle
-            Previewer 3 and export as <code>.mobi</code>.
-          </li>
-          <li>
-            Copy the <code>.mobi</code> file to{" "}
-            <code>documents/dictionaries/</code> on your Kindle.
-          </li>
-          <li>
-            While reading, long-press a word. If another dictionary opens, tap
-            its name and switch to this one.
-          </li>
-        </ol>
-      </section>
+        <section className="builder-install">
+          <h3>Install on Kindle</h3>
+          <ol>
+            <li>
+              If you downloaded a ZIP, open <code>dict.opf</code> in{" "}
+              <a
+                href="https://www.amazon.com/gp/feature.html?docId=1000765261"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Kindle Previewer 3
+              </a>{" "}
+              and export as <code>.mobi</code>.
+            </li>
+            <li>
+              Copy the <code>.mobi</code> to{" "}
+              <code>documents/dictionaries/</code> on your Kindle (USB or email).
+            </li>
+            <li>
+              While reading, long-press a word. If another dictionary opens, tap
+              its name and switch to this one.
+            </li>
+          </ol>
+        </section>
+      </main>
     </div>
   );
 }
