@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { DictionaryEntry } from "@/lib/types";
 
 import "@/components/landing/landing.css";
 
 type Step = "form" | "preview";
-type InputMode = "paste" | "epub";
 
 interface EpubChapterOption {
   id: string;
@@ -24,8 +23,8 @@ function slugify(value: string): string {
 }
 
 export function DictionaryBuilder() {
+  const epubInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>("form");
-  const [inputMode, setInputMode] = useState<InputMode>("paste");
   const [bookTitle, setBookTitle] = useState("");
   const [chapterLabel, setChapterLabel] = useState("");
   const [chapterId, setChapterId] = useState("ch01");
@@ -86,7 +85,6 @@ export function DictionaryBuilder() {
       setChapterLabel("Chapter 4 (Arya IV)");
       setChapterId("ak-ch04");
       setChapterText(text);
-      setInputMode("paste");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load sample.");
     } finally {
@@ -303,9 +301,9 @@ export function DictionaryBuilder() {
 
         {serviceReady === false && (
           <div className="builder-banner builder-banner-warn">
-            AI extraction is not live yet — <code>OPENAI_API_KEY</code> must be
-            set in Vercel. You can still load the sample chapter to explore the
-            UI, but generate will fail until the key is added.
+            AI extraction is not live yet — set <code>OPENAI_API_KEY</code> in
+            Vercel (OpenAI or any OpenAI-compatible API). You can still load the
+            sample chapter to explore the UI.
           </div>
         )}
 
@@ -333,21 +331,62 @@ export function DictionaryBuilder() {
 
         {step === "form" && (
           <div className="builder-card">
-            <div className="builder-tabs">
+            <div className="builder-upload-zone">
+              <p className="builder-upload-title">Upload your ebook</p>
+              <p className="builder-hint">
+                DRM-free EPUB only · max 15 MB · Amazon AZW/KFX not supported
+              </p>
+              <input
+                ref={epubInputRef}
+                type="file"
+                accept=".epub,application/epub+zip"
+                disabled={loading}
+                className="builder-file-input"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void handleEpubUpload(file);
+                }}
+              />
               <button
                 type="button"
-                className={inputMode === "paste" ? "builder-tab active" : "builder-tab"}
-                onClick={() => setInputMode("paste")}
+                className="btn btn-primary builder-upload-btn"
+                disabled={loading}
+                onClick={() => epubInputRef.current?.click()}
               >
-                Paste text
+                Choose EPUB file
               </button>
-              <button
-                type="button"
-                className={inputMode === "epub" ? "builder-tab active" : "builder-tab"}
-                onClick={() => setInputMode("epub")}
-              >
-                Upload EPUB
-              </button>
+              {epubFileName ? (
+                <p className="builder-upload-status">
+                  Loaded: <strong>{epubFileName}</strong>
+                </p>
+              ) : (
+                <p className="builder-upload-status muted">
+                  No file selected yet
+                </p>
+              )}
+            </div>
+
+            {epubChapters.length > 1 && (
+              <label className="builder-field">
+                <span>Select chapter from EPUB</span>
+                <select
+                  value={selectedChapterId}
+                  onChange={(event) =>
+                    handleChapterSelect(event.target.value)
+                  }
+                >
+                  {epubChapters.map((chapter) => (
+                    <option key={chapter.id} value={chapter.id}>
+                      {chapter.label} ({chapter.text.length.toLocaleString()}{" "}
+                      chars)
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <div className="builder-divider">
+              <span>or paste chapter text</span>
             </div>
 
             <div className="builder-grid">
@@ -378,51 +417,15 @@ export function DictionaryBuilder() {
               />
             </label>
 
-            {inputMode === "epub" ? (
-              <div className="builder-field">
-                <span>EPUB file (DRM-free, max 15 MB)</span>
-                <input
-                  type="file"
-                  accept=".epub,application/epub+zip"
-                  disabled={loading}
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) void handleEpubUpload(file);
-                  }}
-                />
-                {epubFileName && (
-                  <p className="builder-hint">Loaded: {epubFileName}</p>
-                )}
-                {epubChapters.length > 1 && (
-                  <label className="builder-field" style={{ marginTop: 12 }}>
-                    <span>Select chapter</span>
-                    <select
-                      value={selectedChapterId}
-                      onChange={(event) =>
-                        handleChapterSelect(event.target.value)
-                      }
-                    >
-                      {epubChapters.map((chapter) => (
-                        <option key={chapter.id} value={chapter.id}>
-                          {chapter.label} ({chapter.text.length.toLocaleString()}{" "}
-                          chars)
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-              </div>
-            ) : (
-              <label className="builder-field">
-                <span>Chapter text</span>
-                <textarea
-                  value={chapterText}
-                  onChange={(event) => setChapterText(event.target.value)}
-                  rows={14}
-                  placeholder="Paste the full chapter text here…"
-                />
-              </label>
-            )}
+            <label className="builder-field">
+              <span>Chapter text</span>
+              <textarea
+                value={chapterText}
+                onChange={(event) => setChapterText(event.target.value)}
+                rows={14}
+                placeholder="Paste one chapter here, or upload an EPUB above and we will fill this in…"
+              />
+            </label>
 
             <p className="builder-hint">
               Personal study only. No DRM. Chapter text is sent to OpenAI for

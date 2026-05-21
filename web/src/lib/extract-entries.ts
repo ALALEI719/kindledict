@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
 
@@ -31,6 +31,23 @@ const extractionSchema = z.object({
   entries: z.array(entrySchema).min(1).max(80),
 });
 
+function getLlmProvider() {
+  const apiKey =
+    process.env.OPENAI_API_KEY?.trim() ||
+    process.env.OPENAI_COMPAT_API_KEY?.trim();
+
+  if (!apiKey) {
+    throw new Error(
+      "No LLM API key configured. Set OPENAI_API_KEY in Vercel (works with OpenAI-compatible gateways too).",
+    );
+  }
+
+  return createOpenAI({
+    apiKey,
+    baseURL: process.env.OPENAI_COMPAT_BASE_URL?.trim() || undefined,
+  });
+}
+
 export async function extractEntries(
   request: ExtractRequest,
 ): Promise<DictionaryEntry[]> {
@@ -45,12 +62,8 @@ export async function extractEntries(
     );
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error(
-      "OPENAI_API_KEY is not configured. Add it in Vercel project settings.",
-    );
-  }
+  const llm = getLlmProvider();
+  const modelId = process.env.OPENAI_CHAT_MODEL?.trim() || "gpt-4o-mini";
 
   const chapterId = request.chapterId?.trim() || "ch01";
   const spoilerScope =
@@ -58,7 +71,7 @@ export async function extractEntries(
     "Only use facts explicitly present in the supplied chapter text. Do not spoil later chapters.";
 
   const { object } = await generateObject({
-    model: openai(process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini"),
+    model: llm(modelId),
     schema: extractionSchema,
     prompt: `You are building a Kindle companion dictionary (fictionary) for fiction readers.
 

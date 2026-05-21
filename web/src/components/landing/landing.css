@@ -562,6 +562,62 @@
   margin-bottom: 20px;
 }
 
+.landing .builder-upload-zone {
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius);
+  background: rgba(196, 92, 38, 0.06);
+  padding: 28px 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.landing .builder-upload-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--text);
+}
+
+.landing .builder-file-input {
+  display: none;
+}
+
+.landing .builder-upload-btn {
+  margin-top: 16px;
+  font-size: 1rem;
+  padding: 14px 28px;
+}
+
+.landing .builder-upload-status {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.landing .builder-upload-status.muted {
+  color: var(--muted);
+}
+
+.landing .builder-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 20px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.landing .builder-divider::before,
+.landing .builder-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
 .landing .builder-tab {
   padding: 8px 16px;
   border-radius: 8px;
