@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useLocale } from "@/components/locale-provider";
+import { readApiJson } from "@/lib/api-response";
 import { formatMessage } from "@/lib/i18n/messages";
 import { getLlmPreset, LLM_PRESETS, type LlmPresetId } from "@/lib/llm-presets";
 import type { ClientLlmConfig } from "@/lib/types";
@@ -85,7 +86,12 @@ export function useUserLlm() {
           llm: settingsToClientLlmConfig(settings),
         }),
       });
-      const data = await response.json();
+      const data = await readApiJson<{
+        ok: boolean;
+        error?: string;
+        provider?: string;
+        model?: string;
+      }>(response, a.testFail);
       if (!response.ok || !data.ok) {
         throw new Error(data.error || a.testFail);
       }

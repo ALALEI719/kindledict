@@ -242,8 +242,12 @@ export const en = {
       noEntries: "No dictionary entries were extracted from this selection.",
       loadSample: "Could not load sample chapter.",
       loadSampleFail: "Failed to load sample.",
+      epubTooLarge:
+        "EPUB is too large (max 15 MB). Use a smaller file or paste chapter text instead.",
       parseEpub: "EPUB parsing failed.",
       parseEpubFail: "Failed to parse EPUB.",
+      noReadableInEpub:
+        "No readable chapters found in this EPUB. Try pasting chapter text instead.",
       extractFail: "Extraction failed for {label}",
       buildFail: "Build failed.",
       generateFail: "Dictionary generation failed.",

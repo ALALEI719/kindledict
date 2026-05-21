@@ -12,6 +12,8 @@ import {
   buildGenerationPlan,
   type GenerationScopeId,
 } from "@/lib/generation-scope";
+import { readApiJson } from "@/lib/api-response";
+import { MAX_EPUB_BYTES, parseEpubBuffer } from "@/lib/parse-epub";
 import { ApiKeyPanel } from "@/components/api-key-panel";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useLocale } from "@/components/locale-provider";
@@ -237,6 +239,17 @@ export function DictionaryBuilder() {
 
   async function handleEpubUpload(file: File) {
     setError(null);
+
+    if (!file.name.toLowerCase().endsWith(".epub")) {
+      setError(b.errors.parseEpub);
+      return;
+    }
+
+    if (file.size > MAX_EPUB_BYTES) {
+      setError(b.errors.epubTooLarge);
+      return;
+    }
+
     setLoading(true);
     setLoadingMessage(b.readingEpub);
     setEpubFileName(file.name);
@@ -244,21 +257,17 @@ export function DictionaryBuilder() {
     setSelectedChapterId("");
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const buffer = await file.arrayBuffer();
+      const parsed = await parseEpubBuffer(buffer);
 
-      const response = await fetch("/api/parse-epub", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      if (!response.ok || !data.ok) {
-        throw new Error(data.error || b.errors.parseEpub);
-      }
+      const chapters: EpubChapterOption[] = parsed.chapters.map((chapter) => ({
+        id: chapter.id,
+        label: chapter.label,
+        text: chapter.text,
+      }));
 
-      const chapters: EpubChapterOption[] = data.chapterTexts;
       setEpubChapters(chapters);
-      if (data.title) setBookTitle(data.title);
+      if (parsed.title) setBookTitle(parsed.title);
 
       const first = chapters[0];
       if (first) {
@@ -266,7 +275,13 @@ export function DictionaryBuilder() {
       }
       setShowPasteText(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : b.errors.parseEpubFail);
+      const message =
+        err instanceof Error ? err.message : b.errors.parseEpubFail;
+      if (message.includes("No readable chapters")) {
+        setError(b.errors.noReadableInEpub);
+      } else {
+        setError(message);
+      }
       setEpubFileName(null);
     } finally {
       setLoading(false);
@@ -289,7 +304,11 @@ export function DictionaryBuilder() {
       }),
     });
 
-    const data = await response.json();
+    const data = await readApiJson<{
+      ok: boolean;
+      error?: string;
+      entries: DictionaryEntry[];
+    }>(response, b.errors.parseEpub);
     if (!response.ok || !data.ok) {
       throw new Error(
         data.error ||
@@ -321,7 +340,10 @@ export function DictionaryBuilder() {
     });
 
     if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
+      const data = await readApiJson<{ error?: string }>(
+        response,
+        b.errors.buildFail,
+      ).catch(() => ({ error: undefined }));
       throw new Error(data.error || b.errors.buildFail);
     }
 
@@ -434,7 +456,10 @@ export function DictionaryBuilder() {
       });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
+        const data = await readApiJson<{ error?: string }>(
+          response,
+          b.errors.buildFail,
+        ).catch(() => ({ error: undefined }));
         throw new Error(data.error || b.errors.buildFail);
       }
 

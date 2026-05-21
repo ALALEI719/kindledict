@@ -236,8 +236,12 @@ export const zh = {
       noEntries: "所选范围内未提取到任何词条。",
       loadSample: "无法加载示例章节。",
       loadSampleFail: "加载示例失败。",
+      epubTooLarge:
+        "EPUB 文件过大（最大 15 MB）。请换一本较小的书，或粘贴章节文本。",
       parseEpub: "EPUB 解析失败。",
       parseEpubFail: "解析 EPUB 失败。",
+      noReadableInEpub:
+        "该 EPUB 没有可读章节。请尝试粘贴章节文本。",
       extractFail: "提取失败：{label}",
       buildFail: "打包失败。",
       generateFail: "词典生成失败。",
