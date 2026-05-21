@@ -3,9 +3,9 @@ import { DictionaryBuilder } from "@/components/dictionary-builder";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Build Dictionary — KindleDict",
+  title: "生成词典 — KindleDict",
   description:
-    "Upload EPUB or paste a chapter to generate a Kindle-compatible companion dictionary.",
+    "上传 EPUB 或粘贴章节，生成可在 Kindle 上使用的定制伴侣词典。",
 };
 
 export default function AppPage() {

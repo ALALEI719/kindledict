@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { useLocale } from "@/components/locale-provider";
+import { formatMessage } from "@/lib/i18n/messages";
 import { getLlmPreset, LLM_PRESETS, type LlmPresetId } from "@/lib/llm-presets";
 import type { ClientLlmConfig } from "@/lib/types";
 import {
@@ -14,6 +16,9 @@ import {
 } from "@/lib/user-llm-client";
 
 export function useUserLlm() {
+  const { messages: m } = useLocale();
+  const a = m.apiKey;
+
   const [settings, setSettings] = useState<StoredUserLlmSettings>(() =>
     createDefaultSettings(),
   );
@@ -65,12 +70,12 @@ export function useUserLlm() {
   const testSettings = useCallback(async () => {
     if (!isStoredSettingsConfigured(settings)) {
       setTestStatus("error");
-      setTestMessage("Enter your API key first.");
+      setTestMessage(a.enterKeyFirst);
       return false;
     }
 
     setTestStatus("testing");
-    setTestMessage("Testing connection…");
+    setTestMessage(a.testing);
 
     try {
       const response = await fetch("/api/llm-test", {
@@ -82,21 +87,26 @@ export function useUserLlm() {
       });
       const data = await response.json();
       if (!response.ok || !data.ok) {
-        throw new Error(data.error || "Connection test failed.");
+        throw new Error(data.error || a.testFail);
       }
 
       saveStoredUserLlmSettings(settings);
       setTestStatus("success");
-      setTestMessage(`Connected via ${data.provider} · ${data.model}`);
+      setTestMessage(
+        formatMessage(a.connected, {
+          provider: String(data.provider),
+          model: String(data.model),
+        }),
+      );
       return true;
     } catch (error) {
       setTestStatus("error");
       setTestMessage(
-        error instanceof Error ? error.message : "Connection test failed.",
+        error instanceof Error ? error.message : a.testFail,
       );
       return false;
     }
-  }, [settings]);
+  }, [settings, a]);
 
   return {
     loaded,

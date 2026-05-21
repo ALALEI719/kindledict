@@ -1,24 +1,19 @@
-import type { Metadata } from "next";
+"use client";
 
 import { LegalLayout } from "@/components/landing/legal-layout";
-
-export const metadata: Metadata = {
-  title: "Contact — KindleDict",
-  description:
-    "Get in touch with KindleDict for support, privacy, or feedback.",
-};
+import { useLocale } from "@/components/locale-provider";
 
 export default function ContactPage() {
-  return (
-    <LegalLayout title="Contact">
-      <p>
-        For support, privacy questions, or feedback about KindleDict, open an
-        issue on GitHub.
-      </p>
+  const { messages: m } = useLocale();
+  const c = m.legal.contact;
 
-      <h2>GitHub</h2>
+  return (
+    <LegalLayout title={m.legal.contactTitle}>
+      <p>{c.intro}</p>
+
+      <h2>{c.github}</h2>
       <p>
-        Report bugs, ask questions, or request features:{" "}
+        {c.githubDesc}{" "}
         <a
           href="https://github.com/ALALEI719/kindledict/issues"
           target="_blank"
@@ -28,9 +23,9 @@ export default function ContactPage() {
         </a>
       </p>
 
-      <h2>Repository</h2>
+      <h2>{c.repo}</h2>
       <p>
-        Source code and documentation:{" "}
+        {c.repoDesc}{" "}
         <a
           href="https://github.com/ALALEI719/kindledict"
           target="_blank"
@@ -40,11 +35,8 @@ export default function ContactPage() {
         </a>
       </p>
 
-      <h2>Response time</h2>
-      <p>
-        KindleDict is an independent project. We aim to respond to GitHub issues
-        within a few business days when possible.
-      </p>
+      <h2>{c.responseTitle}</h2>
+      <p>{c.response}</p>
     </LegalLayout>
   );
 }

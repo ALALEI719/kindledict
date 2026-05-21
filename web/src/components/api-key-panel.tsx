@@ -2,6 +2,7 @@
 
 import type { LlmPreset, LlmPresetId } from "@/lib/llm-presets";
 import type { StoredUserLlmSettings } from "@/lib/user-llm-client";
+import { useLocale } from "@/components/locale-provider";
 
 interface ApiKeyPanelProps {
   byokRequired: boolean;
@@ -34,6 +35,8 @@ export function ApiKeyPanel({
   onSettingsChange,
   onTest,
 }: ApiKeyPanelProps) {
+  const { messages: m } = useLocale();
+  const a = m.apiKey;
   const showCustomFields =
     settings.presetId === "custom" || settings.presetId === "openrouter";
 
@@ -46,10 +49,14 @@ export function ApiKeyPanel({
         className="builder-api-toggle"
         onClick={() => onOpenChange(!open)}
       >
-        <span className="builder-api-toggle-label">AI provider & API key</span>
+        <span className="builder-api-toggle-label">{a.panelTitle}</span>
         <span className="builder-api-toggle-meta">
           {preset.label}
-          {isConfigured ? " · verified" : byokRequired ? " · required" : ""}
+          {isConfigured
+            ? ` · ${a.verified}`
+            : byokRequired
+              ? ` · ${a.required}`
+              : ""}
         </span>
         <span className="builder-api-toggle-icon">{open ? "−" : "+"}</span>
       </button>
@@ -57,8 +64,7 @@ export function ApiKeyPanel({
       {open && (
         <div className="builder-api-body">
           <p className="builder-hint">
-            Your key is stored only in this browser and is sent to your AI
-            provider when you generate a dictionary.
+            {a.hint}
             {preset.keyUrl ? (
               <>
                 {" "}
@@ -67,7 +73,7 @@ export function ApiKeyPanel({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Get API key
+                  {a.getKey}
                 </a>
               </>
             ) : null}
@@ -75,7 +81,7 @@ export function ApiKeyPanel({
 
           <div className="builder-grid builder-grid-tight">
             <label className="builder-field">
-              <span>Provider</span>
+              <span>{a.provider}</span>
               <select
                 value={settings.presetId}
                 onChange={(event) =>
@@ -91,7 +97,7 @@ export function ApiKeyPanel({
             </label>
 
             <label className="builder-field">
-              <span>Model</span>
+              <span>{a.model}</span>
               <input
                 value={settings.model}
                 onChange={(event) =>
@@ -104,7 +110,7 @@ export function ApiKeyPanel({
 
           {showCustomFields && (
             <label className="builder-field">
-              <span>Base URL</span>
+              <span>{a.baseUrl}</span>
               <input
                 value={settings.baseUrl}
                 onChange={(event) =>
@@ -117,7 +123,7 @@ export function ApiKeyPanel({
 
           <div className="builder-api-key-row">
             <label className="builder-field builder-field-grow">
-              <span>API key</span>
+              <span>{a.apiKey}</span>
               <input
                 type="password"
                 value={settings.apiKey}
@@ -133,15 +139,11 @@ export function ApiKeyPanel({
               className="btn btn-secondary builder-api-test-btn"
               onClick={onTest}
             >
-              {testStatus === "testing" ? "Verifying…" : "Verify & save"}
+              {testStatus === "testing" ? a.verifying : a.verifySave}
             </button>
           </div>
 
-          <p className="builder-hint">
-            Verify &amp; save runs a tiny test request to confirm your key works,
-            then saves it locally. Complete this step before generating to avoid
-            wasting tokens.
-          </p>
+          <p className="builder-hint">{a.verifyHint}</p>
 
           {testMessage && (
             <p

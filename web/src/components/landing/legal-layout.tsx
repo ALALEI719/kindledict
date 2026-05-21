@@ -1,6 +1,11 @@
+"use client";
+
 import Link from "next/link";
 
-import "../landing/landing.css";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useLocale } from "@/components/locale-provider";
+
+import "./landing.css";
 
 export function LegalLayout({
   title,
@@ -9,6 +14,8 @@ export function LegalLayout({
   title: string;
   children: React.ReactNode;
 }) {
+  const { messages: m } = useLocale();
+
   return (
     <div className="landing">
       <nav>
@@ -17,9 +24,10 @@ export function LegalLayout({
             Kindle<span>Dict</span>
           </Link>
           <div className="nav-links">
-            <Link href="/">Home</Link>
+            <Link href="/">{m.common.home}</Link>
+            <LanguageSwitcher />
             <Link href="/app" className="btn btn-primary">
-              Try free
+              {m.common.tryFree}
             </Link>
           </div>
         </div>
@@ -29,20 +37,17 @@ export function LegalLayout({
         <h1>{title}</h1>
         <div className="legal-content">{children}</div>
         <p className="legal-back">
-          <Link href="/">← Back to home</Link>
+          <Link href="/">{m.common.backHome}</Link>
         </p>
       </main>
 
       <footer>
         <div className="container">
-          <p>
-            © 2026 KindleDict · Custom Kindle dictionaries &amp; fictionaries
-            for serious readers
-          </p>
+          <p>{m.common.footerTagline}</p>
           <p className="footer-links">
-            <Link href="/privacy">Privacy</Link> ·{" "}
-            <Link href="/terms">Terms</Link> ·{" "}
-            <Link href="/contact">Contact</Link>
+            <Link href="/privacy">{m.common.privacy}</Link> ·{" "}
+            <Link href="/terms">{m.common.terms}</Link> ·{" "}
+            <Link href="/contact">{m.common.contact}</Link>
           </p>
         </div>
       </footer>

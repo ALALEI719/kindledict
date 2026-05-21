@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { LocaleProvider } from "@/components/locale-provider";
+import { zh } from "@/lib/i18n/messages/zh";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,7 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://kindledict.com"),
+  metadataBase: new URL("https://kindledict.vercel.app"),
+  title: zh.meta.homeTitle,
+  description: zh.meta.homeDescription,
 };
 
 export default function RootLayout({
@@ -23,8 +28,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen antialiased">{children}</body>
+    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="min-h-screen antialiased">
+        <LocaleProvider>{children}</LocaleProvider>
+      </body>
     </html>
   );
 }

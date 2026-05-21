@@ -1,3 +1,6 @@
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locale";
+import { formatMessage, getMessages } from "@/lib/i18n/messages";
+
 export type GenerationScopeId =
   | "trial-15k"
   | "trial-30k"
@@ -84,14 +87,16 @@ export function buildGenerationPlan<
   chapters: T[],
   scopeId: GenerationScopeId,
   customCharLimit?: number,
+  locale: Locale = DEFAULT_LOCALE,
 ): GenerationPlan<T> {
+  const scopeLabels = getMessages(locale).builder.scopeLabels;
   const readable = chapters.filter((chapter) => chapter.text.trim().length >= 100);
 
   if (readable.length === 0) {
     return {
       chapters: [],
       totalChars: 0,
-      scopeLabel: "No readable chapters",
+      scopeLabel: scopeLabels.noReadable,
       requestCount: 0,
     };
   }
@@ -114,17 +119,19 @@ export function buildGenerationPlan<
       return {
         chapters: [],
         totalChars: 0,
-        scopeLabel: "Not enough text in selected range",
+        scopeLabel: scopeLabels.notEnoughText,
         requestCount: 0,
       };
     }
 
     const label =
       scopeId === "custom-chars"
-        ? `Custom excerpt (${excerpt.length.toLocaleString()} chars)`
+        ? formatMessage(scopeLabels.customExcerpt, {
+            count: excerpt.length.toLocaleString(),
+          })
         : scopeId === "trial-15k"
-          ? "Trial excerpt (15k chars)"
-          : "Short sample (30k chars)";
+          ? scopeLabels.trial15k
+          : scopeLabels.trial30k;
 
     return {
       chapters: [
@@ -155,7 +162,7 @@ export function buildGenerationPlan<
     return {
       chapters: selected,
       totalChars: selected.reduce((sum, chapter) => sum + chapter.text.length, 0),
-      scopeLabel: "First 3 chapters",
+      scopeLabel: scopeLabels.first3,
       requestCount: selected.length,
     };
   }
@@ -163,7 +170,7 @@ export function buildGenerationPlan<
   return {
     chapters: readable,
     totalChars: readable.reduce((sum, chapter) => sum + chapter.text.length, 0),
-    scopeLabel: "Full book",
+    scopeLabel: scopeLabels.fullBook,
     requestCount: readable.length,
   };
 }

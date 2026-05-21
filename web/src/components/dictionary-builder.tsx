@@ -10,13 +10,15 @@ import {
 } from "@/lib/merge-entries";
 import {
   buildGenerationPlan,
-  buildScanPreviewText,
-  GENERATION_SCOPES,
-  getGenerationScopeOption,
   type GenerationScopeId,
 } from "@/lib/generation-scope";
 import { ApiKeyPanel } from "@/components/api-key-panel";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useLocale } from "@/components/locale-provider";
 import { useUserLlm } from "@/hooks/use-user-llm";
+import { buildLocalizedScanPreviewText } from "@/lib/i18n/scan-preview";
+import { getLocalizedGenerationScopes } from "@/lib/i18n/scopes";
+import { formatMessage } from "@/lib/i18n/messages";
 
 import "@/components/landing/landing.css";
 
@@ -35,7 +37,13 @@ function slugify(value: string): string {
     .replace(/^-|-$/g, "");
 }
 
-function formatUserError(message: string): string {
+function formatUserError(
+  message: string,
+  errors: {
+    geminiModel: string;
+    geminiKey: string;
+  },
+): string {
   const lower = message.toLowerCase();
   if (
     lower.includes("api key not found") ||
@@ -44,9 +52,9 @@ function formatUserError(message: string): string {
     lower.includes("no longer available to new users")
   ) {
     if (lower.includes("no longer available")) {
-      return "Gemini model was updated. In Vercel, set GOOGLE_CHAT_MODEL to gemini-2.5-flash, save, redeploy, then try again.";
+      return errors.geminiModel;
     }
-    return "Your Gemini API key is invalid or expired. Expand AI provider & API key below and click Verify & save.";
+    return errors.geminiKey;
   }
   return message;
 }
@@ -56,6 +64,13 @@ function buildLlmPayload(clientConfig: ClientLlmConfig | null) {
 }
 
 export function DictionaryBuilder() {
+  const { locale, messages: m } = useLocale();
+  const b = m.builder;
+  const generationScopes = useMemo(
+    () => getLocalizedGenerationScopes(locale),
+    [locale],
+  );
+
   const epubInputRef = useRef<HTMLInputElement>(null);
   const apiPanelRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<Step>("form");
@@ -100,6 +115,7 @@ export function DictionaryBuilder() {
         extractableChapters,
         generationScope,
         Number(customCharLimit) || 0,
+        locale,
       );
     }
 
@@ -108,12 +124,13 @@ export function DictionaryBuilder() {
         [
           {
             id: chapterId || "paste",
-            label: chapterLabel || "Pasted text",
+            label: chapterLabel || b.scopeLabels.pastedText,
             text: chapterText,
           },
         ],
         generationScope,
         Number(customCharLimit) || 0,
+        locale,
       );
     }
 
@@ -130,24 +147,28 @@ export function DictionaryBuilder() {
     chapterLabel,
     generationScope,
     customCharLimit,
+    locale,
+    b.scopeLabels.pastedText,
   ]);
 
   const scopeOption = useMemo(
-    () => getGenerationScopeOption(generationScope),
-    [generationScope],
+    () =>
+      generationScopes.find((scope) => scope.id === generationScope) ??
+      generationScopes[0]!,
+    [generationScopes, generationScope],
   );
 
   const hasFullBook = extractableChapters.length > 0;
 
   const scanPreviewText = useMemo(() => {
     if (generationPlan.chapters.length === 0) return "";
-    return buildScanPreviewText(generationPlan);
-  }, [generationPlan]);
+    return buildLocalizedScanPreviewText(generationPlan, locale);
+  }, [generationPlan, locale]);
 
   const entryCountLabel = useMemo(() => {
     if (entries.length === 0) return "";
-    return `${entries.length} entries ready`;
-  }, [entries.length]);
+    return formatMessage(b.entriesReady, { count: entries.length });
+  }, [entries.length, b.entriesReady]);
 
   const canSubmit = chapterText.trim().length >= 100;
   const canExtract = byokRequired
@@ -162,9 +183,7 @@ export function DictionaryBuilder() {
     setApiPanelHighlight(true);
     window.setTimeout(() => setApiPanelHighlight(false), 4000);
     setError(
-      byokRequired
-        ? "Configure your AI API key first: expand AI provider & API key below, enter your key, and click Verify & save."
-        : "AI extraction is not configured. Add an API key, or configure credentials on the server.",
+      byokRequired ? b.errors.needApiKey : b.errors.aiNotConfigured,
     );
     apiPanelRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -197,11 +216,11 @@ export function DictionaryBuilder() {
   async function handleLoadSample() {
     setError(null);
     setLoading(true);
-    setLoadingMessage("Loading sample chapter…");
+    setLoadingMessage(b.loadingSample);
 
     try {
       const response = await fetch("/samples/acok-ch04.txt");
-      if (!response.ok) throw new Error("Could not load sample chapter.");
+      if (!response.ok) throw new Error(b.errors.loadSample);
       const text = await response.text();
       setBookTitle("A Clash of Kings");
       setChapterLabel("Chapter 4 (Arya IV)");
@@ -209,7 +228,7 @@ export function DictionaryBuilder() {
       setChapterText(text);
       setShowPasteText(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load sample.");
+      setError(err instanceof Error ? err.message : b.errors.loadSampleFail);
     } finally {
       setLoading(false);
       setLoadingMessage("");
@@ -219,7 +238,7 @@ export function DictionaryBuilder() {
   async function handleEpubUpload(file: File) {
     setError(null);
     setLoading(true);
-    setLoadingMessage("Reading EPUB…");
+    setLoadingMessage(b.readingEpub);
     setEpubFileName(file.name);
     setEpubChapters([]);
     setSelectedChapterId("");
@@ -234,7 +253,7 @@ export function DictionaryBuilder() {
       });
       const data = await response.json();
       if (!response.ok || !data.ok) {
-        throw new Error(data.error || "EPUB parsing failed.");
+        throw new Error(data.error || b.errors.parseEpub);
       }
 
       const chapters: EpubChapterOption[] = data.chapterTexts;
@@ -247,7 +266,7 @@ export function DictionaryBuilder() {
       }
       setShowPasteText(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to parse EPUB.");
+      setError(err instanceof Error ? err.message : b.errors.parseEpubFail);
       setEpubFileName(null);
     } finally {
       setLoading(false);
@@ -273,7 +292,8 @@ export function DictionaryBuilder() {
     const data = await response.json();
     if (!response.ok || !data.ok) {
       throw new Error(
-        data.error || `Extraction failed for ${chapter.label}.`,
+        data.error ||
+          formatMessage(b.errors.extractFail, { label: chapter.label }),
       );
     }
 
@@ -291,8 +311,10 @@ export function DictionaryBuilder() {
       body: JSON.stringify({
         entries: dictionaryEntries,
         config: {
-          title: `${bookTitle || "My Book"} — Companion Dictionary`,
-          book_title: bookTitle || "My Book",
+          title: formatMessage(b.dictTitle, {
+            book: bookTitle || b.myBook,
+          }),
+          book_title: bookTitle || b.myBook,
           chapter_label: scopeLabel,
         },
       }),
@@ -300,7 +322,7 @@ export function DictionaryBuilder() {
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      throw new Error(data.error || "Build failed.");
+      throw new Error(data.error || b.errors.buildFail);
     }
 
     const blob = await response.blob();
@@ -320,9 +342,9 @@ export function DictionaryBuilder() {
       setError(
         hasFullBook
           ? generationScope === "custom-chars"
-            ? "Custom limit must be at least 100 characters."
-            : "This EPUB has no readable chapters long enough to process."
-          : "Upload an EPUB or paste at least a few paragraphs of chapter text.",
+            ? b.errors.customLimitMin
+            : b.errors.noReadableChapters
+          : b.errors.needText,
       );
       return;
     }
@@ -348,8 +370,14 @@ export function DictionaryBuilder() {
         });
         setLoadingMessage(
           generationPlan.requestCount === 1
-            ? `Reading ${generationPlan.totalChars.toLocaleString()} characters…`
-            : `Reading chapter ${index + 1} of ${generationPlan.requestCount}: ${chapter.label}`,
+            ? formatMessage(b.readingChars, {
+                count: generationPlan.totalChars.toLocaleString(),
+              })
+            : formatMessage(b.readingChapter, {
+                index: index + 1,
+                total: generationPlan.requestCount,
+                label: chapter.label,
+              }),
         );
 
         const chapterEntries = await extractChapterEntries(chapter);
@@ -358,12 +386,12 @@ export function DictionaryBuilder() {
 
       const merged = mergeDictionaryEntries(collected);
       if (merged.length === 0) {
-        throw new Error("No dictionary entries were extracted from this selection.");
+        throw new Error(b.errors.noEntries);
       }
 
       setEntries(merged);
       setChapterLabel(generationPlan.scopeLabel);
-      setLoadingMessage("Packaging your dictionary…");
+      setLoadingMessage(b.packaging);
 
       await downloadDictionaryZip(
         merged,
@@ -374,8 +402,8 @@ export function DictionaryBuilder() {
       setStep("preview");
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Dictionary generation failed.";
-      setError(formatUserError(message));
+        err instanceof Error ? err.message : b.errors.generateFail;
+      setError(formatUserError(message, b.errors));
     } finally {
       setLoading(false);
       setLoadingMessage("");
@@ -385,7 +413,7 @@ export function DictionaryBuilder() {
 
   async function handleDownloadZipFromPreview() {
     setLoading(true);
-    setLoadingMessage("Packaging dictionary files…");
+    setLoadingMessage(b.packagingFiles);
     setError(null);
 
     try {
@@ -395,16 +423,19 @@ export function DictionaryBuilder() {
         body: JSON.stringify({
           entries,
           config: {
-            title: `${bookTitle || "My Book"} — ${chapterLabel || "Chapter"} Companion Dictionary`,
-            book_title: bookTitle || "My Book",
-            chapter_label: chapterLabel || "Chapter 1",
+            title: formatMessage(b.dictTitleChapter, {
+              book: bookTitle || b.myBook,
+              chapter: chapterLabel || b.chapter,
+            }),
+            book_title: bookTitle || b.myBook,
+            chapter_label: chapterLabel || b.chapter,
           },
         }),
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "Build failed.");
+        throw new Error(data.error || b.errors.buildFail);
       }
 
       const blob = await response.blob();
@@ -416,7 +447,7 @@ export function DictionaryBuilder() {
       URL.revokeObjectURL(url);
       setDownloadFormat("zip");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : b.errors.generic);
     } finally {
       setLoading(false);
       setLoadingMessage("");
@@ -431,20 +462,18 @@ export function DictionaryBuilder() {
             Kindle<span>Dict</span>
           </Link>
           <div className="nav-links">
-            <Link href="/">Home</Link>
-            <Link href="/privacy">Privacy</Link>
+            <Link href="/">{m.common.home}</Link>
+            <Link href="/privacy">{m.common.privacy}</Link>
+            <LanguageSwitcher />
           </div>
         </div>
       </nav>
 
       <main className="container builder-main">
         <div className="builder-header">
-          <p className="hero-badge">Public beta</p>
-          <h1>Build a Kindle dictionary from your book</h1>
-          <p className="hero-sub builder-sub">
-            Upload EPUB, choose how much to scan, and download one companion
-            dictionary for Kindle.
-          </p>
+          <p className="hero-badge">{b.publicBeta}</p>
+          <h1>{b.title}</h1>
+          <p className="hero-sub builder-sub">{b.subtitle}</p>
         </div>
 
         {error && <div className="builder-banner builder-banner-error">{error}</div>}
@@ -452,7 +481,10 @@ export function DictionaryBuilder() {
         {loading && bookProgress && (
           <div className="builder-progress">
             <div className="builder-progress-label">
-              Chapter {bookProgress.current} of {bookProgress.total}:{" "}
+              {formatMessage(b.progressChapter, {
+                current: bookProgress.current,
+                total: bookProgress.total,
+              })}{" "}
               {bookProgress.label}
             </div>
             <div className="builder-progress-track">
@@ -472,22 +504,25 @@ export function DictionaryBuilder() {
 
         {downloadFormat && (
           <div className="builder-banner builder-banner-success">
-            Downloaded ZIP — open dict.opf in Kindle Previewer 3 → Export .mobi
+            {b.downloadedZip}
           </div>
         )}
 
         {step === "form" && (
           <div className="builder-card builder-workspace">
             <div className="builder-upload-zone builder-upload-compact">
-              <p className="builder-upload-title">1. Add your book text</p>
+              <p className="builder-upload-title">{b.step1Title}</p>
               <p className="builder-hint builder-source-hint">
-                Upload a DRM-free EPUB (max 15 MB) or paste chapter text.
+                {b.step1Hint}
                 {epubFileName ? (
                   <>
                     {" "}
-                    Loaded <strong>{epubFileName}</strong>
+                    {b.loaded} <strong>{epubFileName}</strong>
                     {hasFullBook && (
-                      <> · {extractableChapters.length} chapters</>
+                      <>
+                        {" "}
+                        · {extractableChapters.length} {b.chapters}
+                      </>
                     )}
                   </>
                 ) : null}
@@ -510,7 +545,7 @@ export function DictionaryBuilder() {
                   disabled={loading}
                   onClick={() => epubInputRef.current?.click()}
                 >
-                  Choose EPUB
+                  {b.chooseEpub}
                 </button>
                 {!hasFullBook && (
                   <button
@@ -519,33 +554,31 @@ export function DictionaryBuilder() {
                     disabled={loading}
                     onClick={() => setShowPasteText((value) => !value)}
                   >
-                    {showPasteText
-                      ? "Hide pasted text"
-                      : "Or paste chapter text instead"}
+                    {showPasteText ? b.hidePaste : b.pasteAlt}
                   </button>
                 )}
               </div>
               {(showPasteText || (!hasFullBook && chapterText.length > 0)) && (
                 <label className="builder-field builder-paste-field">
-                  <span>Chapter text</span>
+                  <span>{b.chapterText}</span>
                   <textarea
                     value={chapterText}
                     onChange={(event) => setChapterText(event.target.value)}
                     rows={8}
-                    placeholder="Paste a chapter here if you do not have an EPUB…"
+                    placeholder={b.chapterPlaceholder}
                   />
                 </label>
               )}
             </div>
 
-            <div className="builder-section-label">2. Dictionary settings</div>
+            <div className="builder-section-label">{b.step2Title}</div>
 
             <label className="builder-field">
-              <span>Book title</span>
+              <span>{b.bookTitle}</span>
               <input
                 value={bookTitle}
                 onChange={(event) => setBookTitle(event.target.value)}
-                placeholder="A Clash of Kings"
+                placeholder={b.bookTitlePlaceholder}
               />
             </label>
 
@@ -553,14 +586,14 @@ export function DictionaryBuilder() {
               className={`builder-grid ${generationScope === "custom-chars" ? "builder-grid-3" : ""}`}
             >
               <label className="builder-field">
-                <span>How much to scan</span>
+                <span>{b.howMuchScan}</span>
                 <select
                   value={generationScope}
                   onChange={(event) =>
                     setGenerationScope(event.target.value as GenerationScopeId)
                   }
                 >
-                  {GENERATION_SCOPES.map((scope) => (
+                  {generationScopes.map((scope) => (
                     <option key={scope.id} value={scope.id}>
                       {scope.label}
                     </option>
@@ -570,7 +603,7 @@ export function DictionaryBuilder() {
 
               {generationScope === "custom-chars" && (
                 <label className="builder-field">
-                  <span>Character limit</span>
+                  <span>{b.charLimit}</span>
                   <input
                     type="number"
                     min={100}
@@ -590,20 +623,17 @@ export function DictionaryBuilder() {
               {generationPlan.totalChars > 0 && (
                 <>
                   {" "}
-                  · {generationPlan.totalChars.toLocaleString()} characters
+                  · {generationPlan.totalChars.toLocaleString()} {b.characters}
                 </>
               )}
             </p>
 
             {hasFullBook && (
               <label className="builder-field builder-scan-preview">
-                <span>Text to scan (preview — updates when you change the option above)</span>
+                <span>{b.scanPreview}</span>
                 <textarea
                   readOnly
-                  value={
-                    scanPreviewText ||
-                    "Not enough readable text in this scan range. Try a different option."
-                  }
+                  value={scanPreviewText || b.scanPreviewEmpty}
                   rows={10}
                   className="builder-preview-text"
                 />
@@ -615,12 +645,8 @@ export function DictionaryBuilder() {
                 className="builder-banner builder-banner-warn builder-api-callout"
                 role="alert"
               >
-                <strong>API key required</strong>
-                <p>
-                  Before generating your dictionary, expand{" "}
-                  <strong>AI provider &amp; API key</strong> below, enter your
-                  key, and click <strong>Verify &amp; save</strong>.
-                </p>
+                <strong>{b.apiKeyRequired}</strong>
+                <p>{b.apiKeyRequiredBody}</p>
               </div>
             )}
 
@@ -633,8 +659,8 @@ export function DictionaryBuilder() {
               onClick={handleGenerateDictionary}
             >
               {loading && bookProgress
-                ? `Generating ${bookProgress.current}/${bookProgress.total}…`
-                : "Generate dictionary"}
+                ? `${b.generating} ${bookProgress.current}/${bookProgress.total}…`
+                : b.generate}
             </button>
 
             <div className="builder-secondary-actions">
@@ -644,7 +670,7 @@ export function DictionaryBuilder() {
                 disabled={loading}
                 onClick={handleLoadSample}
               >
-                Try sample chapter
+                {b.trySample}
               </button>
             </div>
 
@@ -674,7 +700,7 @@ export function DictionaryBuilder() {
           <div className="builder-preview">
             <div className="builder-preview-header">
               <div>
-                <h2>Preview entries</h2>
+                <h2>{b.previewTitle}</h2>
                 <p className="builder-hint">{entryCountLabel}</p>
               </div>
               <button
@@ -682,7 +708,7 @@ export function DictionaryBuilder() {
                 className="builder-link-btn"
                 onClick={() => setStep("form")}
               >
-                Back to book
+                {b.backToBook}
               </button>
             </div>
 
@@ -696,7 +722,7 @@ export function DictionaryBuilder() {
                   <p>{entry.definition}</p>
                   {entry.inflections && entry.inflections.length > 0 && (
                     <p className="builder-hint">
-                      Also: {entry.inflections.join(", ")}
+                      {b.also}: {entry.inflections.join(", ")}
                     </p>
                   )}
                 </li>
@@ -710,7 +736,7 @@ export function DictionaryBuilder() {
                 disabled={loading}
                 onClick={handleDownloadZipFromPreview}
               >
-                Download dictionary ZIP
+                {b.downloadZip}
               </button>
               <button
                 type="button"
@@ -718,34 +744,18 @@ export function DictionaryBuilder() {
                 disabled={loading}
                 onClick={handleGenerateDictionary}
               >
-                Regenerate
+                {b.regenerate}
               </button>
             </div>
           </div>
         )}
 
         <section className="builder-install">
-          <h3>Install on Kindle</h3>
+          <h3>{b.installTitle}</h3>
           <ol>
-            <li>
-              If you downloaded a ZIP, open <code>dict.opf</code> in{" "}
-              <a
-                href="https://www.amazon.com/gp/feature.html?docId=1000765261"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Kindle Previewer 3
-              </a>{" "}
-              and export as <code>.mobi</code>.
-            </li>
-            <li>
-              Copy the <code>.mobi</code> to{" "}
-              <code>documents/dictionaries/</code> on your Kindle (USB or email).
-            </li>
-            <li>
-              While reading, long-press a word. If another dictionary opens, tap
-              its name and switch to this one.
-            </li>
+            {b.installSteps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
           </ol>
         </section>
       </main>
