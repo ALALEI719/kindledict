@@ -245,6 +245,7 @@ export function DictionaryBuilder() {
       if (first) {
         setSelectedChapterId(first.id);
       }
+      setShowPasteText(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to parse EPUB.");
       setEpubFileName(null);
@@ -478,42 +479,64 @@ export function DictionaryBuilder() {
         {step === "form" && (
           <div className="builder-card builder-workspace">
             <div className="builder-upload-zone builder-upload-compact">
-              <div className="builder-upload-row">
-                <div>
-                  <p className="builder-upload-title">1. Upload your EPUB</p>
-                  <p className="builder-hint">
-                    DRM-free · max 15 MB
-                    {epubFileName ? (
-                      <>
-                        {" "}
-                        · loaded <strong>{epubFileName}</strong>
-                        {hasFullBook && (
-                          <> · {extractableChapters.length} chapters</>
-                        )}
-                      </>
-                    ) : null}
-                  </p>
-                </div>
-                <input
-                  ref={epubInputRef}
-                  type="file"
-                  accept=".epub,application/epub+zip"
-                  disabled={loading}
-                  className="builder-file-input"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) void handleEpubUpload(file);
-                  }}
-                />
+              <p className="builder-upload-title">1. Add your book text</p>
+              <p className="builder-hint builder-source-hint">
+                Upload a DRM-free EPUB (max 15 MB) or paste chapter text.
+                {epubFileName ? (
+                  <>
+                    {" "}
+                    Loaded <strong>{epubFileName}</strong>
+                    {hasFullBook && (
+                      <> · {extractableChapters.length} chapters</>
+                    )}
+                  </>
+                ) : null}
+              </p>
+              <input
+                ref={epubInputRef}
+                type="file"
+                accept=".epub,application/epub+zip"
+                disabled={loading}
+                className="builder-file-input"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void handleEpubUpload(file);
+                }}
+              />
+              <div className="builder-source-actions">
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className={`btn btn-primary${hasFullBook ? " builder-source-active" : ""}`}
                   disabled={loading}
                   onClick={() => epubInputRef.current?.click()}
                 >
                   Choose EPUB
                 </button>
+                <button
+                  type="button"
+                  className={`btn btn-secondary${showPasteText && !hasFullBook ? " builder-source-active" : ""}`}
+                  disabled={loading || hasFullBook}
+                  onClick={() => {
+                    if (hasFullBook) return;
+                    setShowPasteText((value) => !value);
+                  }}
+                >
+                  {showPasteText
+                    ? "Hide pasted text"
+                    : "Or paste chapter text instead"}
+                </button>
               </div>
+              {(showPasteText || (!hasFullBook && chapterText.length > 0)) && (
+                <label className="builder-field builder-paste-field">
+                  <span>Chapter text</span>
+                  <textarea
+                    value={chapterText}
+                    onChange={(event) => setChapterText(event.target.value)}
+                    rows={8}
+                    placeholder="Paste a chapter here if you do not have an EPUB…"
+                  />
+                </label>
+              )}
             </div>
 
             <div className="builder-section-label">2. Dictionary settings</div>
@@ -584,30 +607,6 @@ export function DictionaryBuilder() {
                   }
                   rows={10}
                   className="builder-preview-text"
-                />
-              </label>
-            )}
-
-            {!hasFullBook && (
-              <button
-                type="button"
-                className="builder-advanced-toggle"
-                onClick={() => setShowPasteText((value) => !value)}
-              >
-                {showPasteText
-                  ? "Hide pasted text"
-                  : "Or paste chapter text instead"}
-              </button>
-            )}
-
-            {(showPasteText || (!hasFullBook && chapterText.length > 0)) && (
-              <label className="builder-field">
-                <span>Chapter text</span>
-                <textarea
-                  value={chapterText}
-                  onChange={(event) => setChapterText(event.target.value)}
-                  rows={8}
-                  placeholder="Paste a chapter here if you do not have an EPUB…"
                 />
               </label>
             )}
