@@ -1,3 +1,21 @@
+/** Map browser/network failures to a clearer message (e.g. "Failed to fetch"). */
+export function friendlyFetchError(
+  error: unknown,
+  fallback: string,
+  networkHint: string,
+): string {
+  if (error instanceof TypeError && error.message === "Failed to fetch") {
+    return networkHint;
+  }
+  if (error instanceof Error) {
+    if (error.message === "Failed to fetch" || error.message.includes("Failed to fetch")) {
+      return networkHint;
+    }
+    return error.message;
+  }
+  return fallback;
+}
+
 /** Parse a fetch response as JSON; surface plain-text platform errors (e.g. 413). */
 export async function readApiJson<T extends { ok?: boolean; error?: string }>(
   response: Response,

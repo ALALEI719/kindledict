@@ -12,7 +12,8 @@ import {
   buildGenerationPlan,
   type GenerationScopeId,
 } from "@/lib/generation-scope";
-import { readApiJson } from "@/lib/api-response";
+import { friendlyFetchError, readApiJson } from "@/lib/api-response";
+import { splitChaptersForExtract, truncateForExtract } from "@/lib/chapter-limits";
 import { MAX_EPUB_BYTES, parseEpubBuffer } from "@/lib/parse-epub";
 import { ApiKeyPanel } from "@/components/api-key-panel";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -257,14 +258,22 @@ export function DictionaryBuilder() {
     setSelectedChapterId("");
 
     try {
-      const buffer = await file.arrayBuffer();
+      let buffer: ArrayBuffer;
+      try {
+        buffer = await file.arrayBuffer();
+      } catch {
+        throw new Error(b.errors.epubReadFail);
+      }
+
       const parsed = await parseEpubBuffer(buffer);
 
-      const chapters: EpubChapterOption[] = parsed.chapters.map((chapter) => ({
-        id: chapter.id,
-        label: chapter.label,
-        text: chapter.text,
-      }));
+      const chapters: EpubChapterOption[] = splitChaptersForExtract(
+        parsed.chapters.map((chapter) => ({
+          id: chapter.id,
+          label: chapter.label,
+          text: chapter.text,
+        })),
+      );
 
       setEpubChapters(chapters);
       if (parsed.title) setBookTitle(parsed.title);
@@ -275,10 +284,15 @@ export function DictionaryBuilder() {
       }
       setShowPasteText(false);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : b.errors.parseEpubFail;
+      const message = friendlyFetchError(
+        err,
+        b.errors.parseEpubFail,
+        b.errors.epubReadFail,
+      );
       if (message.includes("No readable chapters")) {
         setError(b.errors.noReadableInEpub);
+      } else if (message === b.errors.epubReadFail) {
+        setError(b.errors.epubReadFail);
       } else {
         setError(message);
       }
@@ -292,23 +306,32 @@ export function DictionaryBuilder() {
   async function extractChapterEntries(
     chapter: EpubChapterOption,
   ): Promise<DictionaryEntry[]> {
-    const response = await fetch("/api/extract", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chapterText: chapter.text,
-        bookTitle,
-        chapterLabel: chapter.label,
-        chapterId: chapter.id,
-        ...buildLlmPayload(userLlm.clientConfig),
-      }),
-    });
+    const chapterText = truncateForExtract(chapter.text);
+
+    let response: Response;
+    try {
+      response = await fetch("/api/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chapterText,
+          bookTitle,
+          chapterLabel: chapter.label,
+          chapterId: chapter.id,
+          ...buildLlmPayload(userLlm.clientConfig),
+        }),
+      });
+    } catch (error) {
+      throw new Error(
+        friendlyFetchError(error, b.errors.generateFail, b.errors.networkError),
+      );
+    }
 
     const data = await readApiJson<{
       ok: boolean;
       error?: string;
       entries: DictionaryEntry[];
-    }>(response, b.errors.parseEpub);
+    }>(response, b.errors.networkError);
     if (!response.ok || !data.ok) {
       throw new Error(
         data.error ||
@@ -423,9 +446,11 @@ export function DictionaryBuilder() {
 
       setStep("preview");
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : b.errors.generateFail;
-      setError(formatUserError(message, b.errors));
+      const message = formatUserError(
+        friendlyFetchError(err, b.errors.generateFail, b.errors.networkError),
+        b.errors,
+      );
+      setError(message);
     } finally {
       setLoading(false);
       setLoadingMessage("");

@@ -238,6 +238,10 @@ export const zh = {
       loadSampleFail: "加载示例失败。",
       epubTooLarge:
         "EPUB 文件过大（最大 15 MB）。请换一本较小的书，或粘贴章节文本。",
+      epubReadFail:
+        "无法读取该 EPUB 文件。若文件在 iCloud 网盘，请先在本机「下载」完成后再选择；或换用本地副本。",
+      networkError:
+        "网络请求失败。请检查网络；生成时请先选「快速试用」等较小范围；并确认 API Key 已验证。",
       parseEpub: "EPUB 解析失败。",
       parseEpubFail: "解析 EPUB 失败。",
       noReadableInEpub:

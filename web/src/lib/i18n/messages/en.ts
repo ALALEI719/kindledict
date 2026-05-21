@@ -244,6 +244,10 @@ export const en = {
       loadSampleFail: "Failed to load sample.",
       epubTooLarge:
         "EPUB is too large (max 15 MB). Use a smaller file or paste chapter text instead.",
+      epubReadFail:
+        "Could not read this EPUB. If it lives in iCloud Drive, download it to this Mac first, then choose it again.",
+      networkError:
+        "Network request failed. Check your connection, use a smaller scan range (e.g. Quick try), and verify your API key.",
       parseEpub: "EPUB parsing failed.",
       parseEpubFail: "Failed to parse EPUB.",
       noReadableInEpub:
