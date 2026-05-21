@@ -1,5 +1,7 @@
 import { DictionaryBuilder } from "@/components/dictionary-builder";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Build Dictionary — KindleDict",
   description:
