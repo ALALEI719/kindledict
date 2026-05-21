@@ -141,7 +141,7 @@ export function DictionaryBuilder() {
   async function handleExtract() {
     if (!serviceReady) {
       setError(
-        "AI extraction is not configured yet. Ask the site owner to add OPENAI_API_KEY on Vercel.",
+        "AI extraction is not configured yet. Add GOOGLE_GENERATIVE_AI_API_KEY (Gemini) or an OpenAI-compatible key on Vercel.",
       );
       return;
     }
@@ -180,7 +180,7 @@ export function DictionaryBuilder() {
   async function handleGenerate() {
     if (!serviceReady) {
       setError(
-        "AI extraction is not configured yet. Ask the site owner to add OPENAI_API_KEY on Vercel.",
+        "AI extraction is not configured yet. Add GOOGLE_GENERATIVE_AI_API_KEY (Gemini) or an OpenAI-compatible key on Vercel.",
       );
       return;
     }
@@ -301,9 +301,9 @@ export function DictionaryBuilder() {
 
         {serviceReady === false && (
           <div className="builder-banner builder-banner-warn">
-            AI extraction is not live yet — set <code>OPENAI_API_KEY</code> in
-            Vercel (OpenAI or any OpenAI-compatible API). You can still load the
-            sample chapter to explore the UI.
+            AI extraction is not live yet. Easiest setup without OpenAI: add{" "}
+            <code>GOOGLE_GENERATIVE_AI_API_KEY</code> (Gemini, free tier on Google
+            AI Studio). Or use DeepSeek via <code>OPENAI_COMPAT_BASE_URL</code>.
           </div>
         )}
 

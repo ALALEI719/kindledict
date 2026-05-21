@@ -8,7 +8,35 @@
 
 ## Required before first real user test
 
-1. **Add `OPENAI_API_KEY` on Vercel**
+**You do NOT need OpenAI.** Pick one LLM provider:
+
+### Option A — Google Gemini (recommended, no foreign payment)
+
+1. Open [Google AI Studio](https://aistudio.google.com/apikey) and create an API key
+2. In Vercel → kindledict → Environment Variables, add:
+
+| Variable | Value |
+|----------|-------|
+| `LLM_PROVIDER` | `google` |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | your Gemini key |
+| `GOOGLE_CHAT_MODEL` | `gemini-2.0-flash` (optional) |
+
+3. Redeploy
+
+### Option B — DeepSeek (国内友好，便宜)
+
+| Variable | Value |
+|----------|-------|
+| `LLM_PROVIDER` | `openai-compatible` |
+| `OPENAI_API_KEY` | your DeepSeek key |
+| `OPENAI_COMPAT_BASE_URL` | `https://api.deepseek.com/v1` |
+| `OPENAI_CHAT_MODEL` | `deepseek-chat` |
+
+### Option C — OpenAI official
+
+Only if you have billing set up on OpenAI.
+
+1. **Add `OPENAI_API_KEY` on Vercel** (if using OpenAI)
    - Dashboard → kindledict → Settings → Environment Variables
    - Redeploy after saving
 

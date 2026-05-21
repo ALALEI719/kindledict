@@ -1,26 +1,22 @@
 import { NextResponse } from "next/server";
 
+import { getLlmConfig } from "@/lib/llm";
+
 export async function GET() {
-  const hasLlmKey = Boolean(
-    process.env.OPENAI_API_KEY?.trim() ||
-      process.env.OPENAI_COMPAT_API_KEY?.trim(),
-  );
+  const llm = getLlmConfig();
   const hasCompileWorker = Boolean(process.env.COMPILE_WORKER_URL?.trim());
-  const usesCompatGateway = Boolean(process.env.OPENAI_COMPAT_BASE_URL?.trim());
 
   return NextResponse.json({
     ok: true,
-    ready: hasLlmKey,
+    ready: llm.ready,
     features: {
-      extract: hasLlmKey,
+      extract: llm.ready,
       mobiCompile: hasCompileWorker,
     },
     llm: {
-      provider: usesCompatGateway ? "openai-compatible" : "openai",
-      model: process.env.OPENAI_CHAT_MODEL?.trim() || "gpt-4o-mini",
+      provider: llm.provider,
+      model: llm.model,
     },
-    message: hasLlmKey
-      ? "Service ready."
-      : "Set OPENAI_API_KEY in Vercel. Compatible gateways also work with OPENAI_COMPAT_BASE_URL.",
+    message: llm.ready ? "Service ready." : llm.setupHint,
   });
 }
