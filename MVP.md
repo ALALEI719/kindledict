@@ -1,4 +1,4 @@
-# KindleDict MVP Checklist
+# KindleDict Public Beta Checklist
 
 ## Live app
 
@@ -6,24 +6,49 @@
 - Builder: https://kindledict.vercel.app/app
 - Privacy / Terms / Contact pages
 
-## Required before first real user test
+## Public beta model (BYOK)
 
-**You do NOT need OpenAI.** Pick one LLM provider:
+Hosted demo uses **Bring Your Own Key**:
 
-### Option A — Google Gemini (recommended, no foreign payment)
+1. Users pick a provider in `/app` (Gemini, DeepSeek, Moonshot, OpenAI, OpenRouter, custom)
+2. Users click **Test & save key**
+3. Key stays in browser localStorage; requests send it only when generating
+4. You do **not** pay their AI usage
 
-1. Open [Google AI Studio](https://aistudio.google.com/apikey) and create an API key
-2. In Vercel → kindledict → Environment Variables, add:
+### Vercel env for public beta
+
+| Variable | Value |
+|----------|-------|
+| `KINDLE_DICT_BYOK_REQUIRED` | `true` |
+
+Do **not** set server-side `GOOGLE_GENERATIVE_AI_API_KEY` / `OPENAI_API_KEY` on the public beta project unless you want to subsidize usage.
+
+Redeploy after changing env vars.
+
+### Supported user providers
+
+| Preset | Best for |
+|--------|----------|
+| Google Gemini | Free tier, no OpenAI account |
+| DeepSeek | Domestic payment, low cost |
+| Moonshot (Kimi) | Chinese OpenAI-compatible API |
+| OpenAI | Official API |
+| OpenRouter | One key, many models |
+| Custom | Any OpenAI-compatible gateway |
+
+## Self-host / internal testing (optional server AI)
+
+If `KINDLE_DICT_BYOK_REQUIRED` is not `true`, you can still configure server keys:
+
+### Option A — Google Gemini
 
 | Variable | Value |
 |----------|-------|
 | `LLM_PROVIDER` | `google` |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | your Gemini key |
-| `GOOGLE_CHAT_MODEL` | `gemini-2.0-flash` (optional) |
+| `GOOGLE_CHAT_MODEL` | `gemini-2.5-flash` |
 
-3. Redeploy
-
-### Option B — DeepSeek (国内友好，便宜)
+### Option B — DeepSeek
 
 | Variable | Value |
 |----------|-------|
@@ -31,13 +56,6 @@
 | `OPENAI_API_KEY` | your DeepSeek key |
 | `OPENAI_COMPAT_BASE_URL` | `https://api.deepseek.com/v1` |
 | `OPENAI_CHAT_MODEL` | `deepseek-chat` |
-
-### Option C — OpenAI official
-
-Only if you have billing set up on OpenAI.
-
-1. **Add `OPENAI_API_KEY` on Vercel** (if using OpenAI)
-   - Dashboard → kindledict → Settings → Environment Variables
    - Redeploy after saving
 
 2. **Vercel Pro (recommended)**

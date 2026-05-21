@@ -3,7 +3,20 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import type { DictionaryEntry } from "@/lib/types";
+import type { ClientLlmConfig, DictionaryEntry } from "@/lib/types";
+import {
+  filterExtractableChapters,
+  mergeDictionaryEntries,
+} from "@/lib/merge-entries";
+import {
+  buildGenerationPlan,
+  buildScanPreviewText,
+  GENERATION_SCOPES,
+  getGenerationScopeOption,
+  type GenerationScopeId,
+} from "@/lib/generation-scope";
+import { ApiKeyPanel } from "@/components/api-key-panel";
+import { useUserLlm } from "@/hooks/use-user-llm";
 
 import "@/components/landing/landing.css";
 
@@ -22,8 +35,29 @@ function slugify(value: string): string {
     .replace(/^-|-$/g, "");
 }
 
+function formatUserError(message: string): string {
+  const lower = message.toLowerCase();
+  if (
+    lower.includes("api key not found") ||
+    lower.includes("api key expired") ||
+    lower.includes("invalid api key") ||
+    lower.includes("no longer available to new users")
+  ) {
+    if (lower.includes("no longer available")) {
+      return "Gemini model was updated. In Vercel, set GOOGLE_CHAT_MODEL to gemini-2.5-flash, save, redeploy, then try again.";
+    }
+    return "Your Gemini API key is invalid or expired. Expand AI provider & API key below and click Verify & save.";
+  }
+  return message;
+}
+
+function buildLlmPayload(clientConfig: ClientLlmConfig | null) {
+  return clientConfig ? { llm: clientConfig } : {};
+}
+
 export function DictionaryBuilder() {
   const epubInputRef = useRef<HTMLInputElement>(null);
+  const apiPanelRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<Step>("form");
   const [bookTitle, setBookTitle] = useState("");
   const [chapterLabel, setChapterLabel] = useState("");
@@ -37,11 +71,78 @@ export function DictionaryBuilder() {
     null,
   );
   const [serviceReady, setServiceReady] = useState<boolean | null>(null);
-  const [mobiCompileReady, setMobiCompileReady] = useState(false);
+  const [byokRequired, setByokRequired] = useState(true);
+  const userLlm = useUserLlm();
 
   const [epubFileName, setEpubFileName] = useState<string | null>(null);
   const [epubChapters, setEpubChapters] = useState<EpubChapterOption[]>([]);
   const [selectedChapterId, setSelectedChapterId] = useState("");
+  const [bookProgress, setBookProgress] = useState<{
+    current: number;
+    total: number;
+    label: string;
+  } | null>(null);
+  const [generationScope, setGenerationScope] =
+    useState<GenerationScopeId>("trial-15k");
+  const [customCharLimit, setCustomCharLimit] = useState("20000");
+  const [showPasteText, setShowPasteText] = useState(false);
+  const [apiPanelOpen, setApiPanelOpen] = useState(false);
+  const [apiPanelHighlight, setApiPanelHighlight] = useState(false);
+
+  const extractableChapters = useMemo(
+    () => filterExtractableChapters(epubChapters),
+    [epubChapters],
+  );
+
+  const generationPlan = useMemo(() => {
+    if (extractableChapters.length > 0) {
+      return buildGenerationPlan(
+        extractableChapters,
+        generationScope,
+        Number(customCharLimit) || 0,
+      );
+    }
+
+    if (chapterText.trim().length >= 100) {
+      return buildGenerationPlan(
+        [
+          {
+            id: chapterId || "paste",
+            label: chapterLabel || "Pasted text",
+            text: chapterText,
+          },
+        ],
+        generationScope,
+        Number(customCharLimit) || 0,
+      );
+    }
+
+    return {
+      chapters: [],
+      totalChars: 0,
+      scopeLabel: "",
+      requestCount: 0,
+    };
+  }, [
+    extractableChapters,
+    chapterText,
+    chapterId,
+    chapterLabel,
+    generationScope,
+    customCharLimit,
+  ]);
+
+  const scopeOption = useMemo(
+    () => getGenerationScopeOption(generationScope),
+    [generationScope],
+  );
+
+  const hasFullBook = extractableChapters.length > 0;
+
+  const scanPreviewText = useMemo(() => {
+    if (generationPlan.chapters.length === 0) return "";
+    return buildScanPreviewText(generationPlan);
+  }, [generationPlan]);
 
   const entryCountLabel = useMemo(() => {
     if (entries.length === 0) return "";
@@ -49,13 +150,35 @@ export function DictionaryBuilder() {
   }, [entries.length]);
 
   const canSubmit = chapterText.trim().length >= 100;
+  const canExtract = byokRequired
+    ? userLlm.isConfigured
+    : userLlm.isConfigured || serviceReady === true;
+  const canGenerateContent =
+    generationPlan.chapters.length > 0 && (hasFullBook || canSubmit);
+
+  const ensureExtractReady = () => {
+    if (canExtract) return true;
+    setApiPanelOpen(true);
+    setApiPanelHighlight(true);
+    window.setTimeout(() => setApiPanelHighlight(false), 4000);
+    setError(
+      byokRequired
+        ? "Configure your AI API key first: expand AI provider & API key below, enter your key, and click Verify & save."
+        : "AI extraction is not configured. Add an API key, or configure credentials on the server.",
+    );
+    apiPanelRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+    return false;
+  };
 
   const checkHealth = useCallback(async () => {
     try {
       const response = await fetch("/api/health");
       const data = await response.json();
+      setByokRequired(Boolean(data.beta?.byokRequired));
       setServiceReady(Boolean(data.ready));
-      setMobiCompileReady(Boolean(data.features?.mobiCompile));
     } catch {
       setServiceReady(false);
     }
@@ -65,12 +188,11 @@ export function DictionaryBuilder() {
     checkHealth();
   }, [checkHealth]);
 
-  function applyChapter(chapter: EpubChapterOption, title?: string) {
-    setChapterText(chapter.text);
-    setChapterId(chapter.id);
-    setChapterLabel(chapter.label);
-    if (title) setBookTitle(title);
-  }
+  useEffect(() => {
+    if (userLlm.loaded && !userLlm.isConfigured && byokRequired) {
+      setApiPanelOpen(true);
+    }
+  }, [userLlm.loaded, userLlm.isConfigured, byokRequired]);
 
   async function handleLoadSample() {
     setError(null);
@@ -85,6 +207,7 @@ export function DictionaryBuilder() {
       setChapterLabel("Chapter 4 (Arya IV)");
       setChapterId("ak-ch04");
       setChapterText(text);
+      setShowPasteText(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load sample.");
     } finally {
@@ -121,7 +244,6 @@ export function DictionaryBuilder() {
       const first = chapters[0];
       if (first) {
         setSelectedChapterId(first.id);
-        applyChapter(first, data.title);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to parse EPUB.");
@@ -132,105 +254,131 @@ export function DictionaryBuilder() {
     }
   }
 
-  function handleChapterSelect(chapterId: string) {
-    setSelectedChapterId(chapterId);
-    const chapter = epubChapters.find((item) => item.id === chapterId);
-    if (chapter) applyChapter(chapter);
+  async function extractChapterEntries(
+    chapter: EpubChapterOption,
+  ): Promise<DictionaryEntry[]> {
+    const response = await fetch("/api/extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chapterText: chapter.text,
+        bookTitle,
+        chapterLabel: chapter.label,
+        chapterId: chapter.id,
+        ...buildLlmPayload(userLlm.clientConfig),
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+      throw new Error(
+        data.error || `Extraction failed for ${chapter.label}.`,
+      );
+    }
+
+    return data.entries as DictionaryEntry[];
   }
 
-  async function handleExtract() {
-    if (!serviceReady) {
+  async function downloadDictionaryZip(
+    dictionaryEntries: DictionaryEntry[],
+    scopeLabel: string,
+    fileSlug: string,
+  ) {
+    const response = await fetch("/api/build", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        entries: dictionaryEntries,
+        config: {
+          title: `${bookTitle || "My Book"} — Companion Dictionary`,
+          book_title: bookTitle || "My Book",
+          chapter_label: scopeLabel,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || "Build failed.");
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `kindledict-${fileSlug}.zip`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setDownloadFormat("zip");
+  }
+
+  async function handleGenerateDictionary() {
+    if (!ensureExtractReady()) return;
+
+    if (generationPlan.chapters.length === 0) {
       setError(
-        "AI extraction is not configured yet. Add GOOGLE_GENERATIVE_AI_API_KEY (Gemini) or an OpenAI-compatible key on Vercel.",
+        hasFullBook
+          ? generationScope === "custom-chars"
+            ? "Custom limit must be at least 100 characters."
+            : "This EPUB has no readable chapters long enough to process."
+          : "Upload an EPUB or paste at least a few paragraphs of chapter text.",
       );
       return;
     }
 
     setLoading(true);
-    setLoadingMessage("AI is reading your chapter and picking lookup terms…");
-    setError(null);
-
-    try {
-      const response = await fetch("/api/extract", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chapterText,
-          bookTitle,
-          chapterLabel,
-          chapterId,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok || !data.ok) {
-        throw new Error(data.error || "Extraction failed.");
-      }
-
-      setEntries(data.entries);
-      setStep("preview");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setLoading(false);
-      setLoadingMessage("");
-    }
-  }
-
-  async function handleGenerate() {
-    if (!serviceReady) {
-      setError(
-        "AI extraction is not configured yet. Add GOOGLE_GENERATIVE_AI_API_KEY (Gemini) or an OpenAI-compatible key on Vercel.",
-      );
-      return;
-    }
-
-    setLoading(true);
-    setLoadingMessage(
-      "Generating dictionary — this may take 1–2 minutes for a long chapter…",
-    );
     setError(null);
     setDownloadFormat(null);
+    setBookProgress({
+      current: 0,
+      total: generationPlan.requestCount,
+      label: generationPlan.chapters[0]?.label ?? "",
+    });
 
     try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chapterText,
-          bookTitle,
-          chapterLabel,
-          chapterId,
-        }),
-      });
+      const collected: DictionaryEntry[] = [];
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "Generation failed.");
+      for (let index = 0; index < generationPlan.chapters.length; index += 1) {
+        const chapter = generationPlan.chapters[index]!;
+        setBookProgress({
+          current: index + 1,
+          total: generationPlan.requestCount,
+          label: chapter.label,
+        });
+        setLoadingMessage(
+          generationPlan.requestCount === 1
+            ? `Reading ${generationPlan.totalChars.toLocaleString()} characters…`
+            : `Reading chapter ${index + 1} of ${generationPlan.requestCount}: ${chapter.label}`,
+        );
+
+        const chapterEntries = await extractChapterEntries(chapter);
+        collected.push(...chapterEntries);
       }
 
-      const format =
-        response.headers.get("X-KindleDict-Format") === "source-zip"
-          ? "zip"
-          : "mobi";
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      const slug = slugify(chapterLabel || chapterId || "dictionary");
-      anchor.href = url;
-      anchor.download = `kindledict-${slug}.${format === "zip" ? "zip" : "mobi"}`;
-      anchor.click();
-      URL.revokeObjectURL(url);
-      setDownloadFormat(format);
-
-      if (step === "form" && entries.length === 0) {
-        setStep("preview");
+      const merged = mergeDictionaryEntries(collected);
+      if (merged.length === 0) {
+        throw new Error("No dictionary entries were extracted from this selection.");
       }
+
+      setEntries(merged);
+      setChapterLabel(generationPlan.scopeLabel);
+      setLoadingMessage("Packaging your dictionary…");
+
+      await downloadDictionaryZip(
+        merged,
+        generationPlan.scopeLabel,
+        slugify(`${bookTitle || "book"}-${generationScope}`),
+      );
+
+      setStep("preview");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      const message =
+        err instanceof Error ? err.message : "Dictionary generation failed.";
+      setError(formatUserError(message));
     } finally {
       setLoading(false);
       setLoadingMessage("");
+      setBookProgress(null);
     }
   }
 
@@ -290,177 +438,237 @@ export function DictionaryBuilder() {
 
       <main className="container builder-main">
         <div className="builder-header">
-          <p className="hero-badge">MVP · Kindle fictionary builder</p>
-          <h1>Turn a chapter into a Kindle dictionary</h1>
+          <p className="hero-badge">Public beta</p>
+          <h1>Build a Kindle dictionary from your book</h1>
           <p className="hero-sub builder-sub">
-            Upload a DRM-free EPUB or paste chapter text. AI extracts names,
-            places, and book-specific terms, then packages a Kindle-compatible
-            dictionary you can sideload.
+            Upload EPUB, choose how much to scan, and download one companion
+            dictionary for Kindle.
           </p>
         </div>
 
-        {serviceReady === false && (
-          <div className="builder-banner builder-banner-warn">
-            AI extraction is not live yet. Easiest setup without OpenAI: add{" "}
-            <code>GOOGLE_GENERATIVE_AI_API_KEY</code> (Gemini, free tier on Google
-            AI Studio). Or use DeepSeek via <code>OPENAI_COMPAT_BASE_URL</code>.
-          </div>
-        )}
-
-        {serviceReady && !mobiCompileReady && (
-          <div className="builder-banner builder-banner-info">
-            Downloads are dictionary source ZIP files. Open{" "}
-            <code>dict.opf</code> in Kindle Previewer 3 to export{" "}
-            <code>.mobi</code>.
-          </div>
-        )}
-
         {error && <div className="builder-banner builder-banner-error">{error}</div>}
 
-        {loading && loadingMessage && (
+        {loading && bookProgress && (
+          <div className="builder-progress">
+            <div className="builder-progress-label">
+              Chapter {bookProgress.current} of {bookProgress.total}:{" "}
+              {bookProgress.label}
+            </div>
+            <div className="builder-progress-track">
+              <div
+                className="builder-progress-fill"
+                style={{
+                  width: `${Math.round((bookProgress.current / bookProgress.total) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {loading && loadingMessage && !bookProgress && (
           <div className="builder-banner builder-banner-info">{loadingMessage}</div>
         )}
 
         {downloadFormat && (
           <div className="builder-banner builder-banner-success">
-            {downloadFormat === "mobi"
-              ? "Downloaded .mobi — copy to Kindle documents/dictionaries/"
-              : "Downloaded ZIP — open dict.opf in Kindle Previewer 3 → Export .mobi"}
+            Downloaded ZIP — open dict.opf in Kindle Previewer 3 → Export .mobi
           </div>
         )}
 
         {step === "form" && (
-          <div className="builder-card">
-            <div className="builder-upload-zone">
-              <p className="builder-upload-title">Upload your ebook</p>
-              <p className="builder-hint">
-                DRM-free EPUB only · max 15 MB · Amazon AZW/KFX not supported
-              </p>
-              <input
-                ref={epubInputRef}
-                type="file"
-                accept=".epub,application/epub+zip"
-                disabled={loading}
-                className="builder-file-input"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void handleEpubUpload(file);
-                }}
-              />
-              <button
-                type="button"
-                className="btn btn-primary builder-upload-btn"
-                disabled={loading}
-                onClick={() => epubInputRef.current?.click()}
-              >
-                Choose EPUB file
-              </button>
-              {epubFileName ? (
-                <p className="builder-upload-status">
-                  Loaded: <strong>{epubFileName}</strong>
-                </p>
-              ) : (
-                <p className="builder-upload-status muted">
-                  No file selected yet
-                </p>
-              )}
+          <div className="builder-card builder-workspace">
+            <div className="builder-upload-zone builder-upload-compact">
+              <div className="builder-upload-row">
+                <div>
+                  <p className="builder-upload-title">1. Upload your EPUB</p>
+                  <p className="builder-hint">
+                    DRM-free · max 15 MB
+                    {epubFileName ? (
+                      <>
+                        {" "}
+                        · loaded <strong>{epubFileName}</strong>
+                        {hasFullBook && (
+                          <> · {extractableChapters.length} chapters</>
+                        )}
+                      </>
+                    ) : null}
+                  </p>
+                </div>
+                <input
+                  ref={epubInputRef}
+                  type="file"
+                  accept=".epub,application/epub+zip"
+                  disabled={loading}
+                  className="builder-file-input"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void handleEpubUpload(file);
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={loading}
+                  onClick={() => epubInputRef.current?.click()}
+                >
+                  Choose EPUB
+                </button>
+              </div>
             </div>
 
-            {epubChapters.length > 1 && (
+            <div className="builder-section-label">2. Dictionary settings</div>
+
+            <label className="builder-field">
+              <span>Book title</span>
+              <input
+                value={bookTitle}
+                onChange={(event) => setBookTitle(event.target.value)}
+                placeholder="A Clash of Kings"
+              />
+            </label>
+
+            <div
+              className={`builder-grid ${generationScope === "custom-chars" ? "builder-grid-3" : ""}`}
+            >
               <label className="builder-field">
-                <span>Select chapter from EPUB</span>
+                <span>How much to scan</span>
                 <select
-                  value={selectedChapterId}
+                  value={generationScope}
                   onChange={(event) =>
-                    handleChapterSelect(event.target.value)
+                    setGenerationScope(event.target.value as GenerationScopeId)
                   }
                 >
-                  {epubChapters.map((chapter) => (
-                    <option key={chapter.id} value={chapter.id}>
-                      {chapter.label} ({chapter.text.length.toLocaleString()}{" "}
-                      chars)
+                  {GENERATION_SCOPES.map((scope) => (
+                    <option key={scope.id} value={scope.id}>
+                      {scope.label}
                     </option>
                   ))}
                 </select>
               </label>
-            )}
 
-            <div className="builder-divider">
-              <span>or paste chapter text</span>
+              {generationScope === "custom-chars" && (
+                <label className="builder-field">
+                  <span>Character limit</span>
+                  <input
+                    type="number"
+                    min={100}
+                    max={120000}
+                    value={customCharLimit}
+                    onChange={(event) =>
+                      setCustomCharLimit(event.target.value)
+                    }
+                    placeholder="20000"
+                  />
+                </label>
+              )}
             </div>
 
-            <div className="builder-grid">
-              <label className="builder-field">
-                <span>Book title</span>
-                <input
-                  value={bookTitle}
-                  onChange={(event) => setBookTitle(event.target.value)}
-                  placeholder="A Clash of Kings"
-                />
-              </label>
-              <label className="builder-field">
-                <span>Chapter label</span>
-                <input
-                  value={chapterLabel}
-                  onChange={(event) => setChapterLabel(event.target.value)}
-                  placeholder="Chapter 4 (Arya IV)"
-                />
-              </label>
-            </div>
-
-            <label className="builder-field">
-              <span>Chapter id (optional)</span>
-              <input
-                value={chapterId}
-                onChange={(event) => setChapterId(event.target.value)}
-                placeholder="ak-ch04"
-              />
-            </label>
-
-            <label className="builder-field">
-              <span>Chapter text</span>
-              <textarea
-                value={chapterText}
-                onChange={(event) => setChapterText(event.target.value)}
-                rows={14}
-                placeholder="Paste one chapter here, or upload an EPUB above and we will fill this in…"
-              />
-            </label>
-
-            <p className="builder-hint">
-              Personal study only. No DRM. Chapter text is sent to OpenAI for
-              extraction and not stored after processing.
-              {chapterText.length > 0 && (
-                <> · {chapterText.length.toLocaleString()} characters</>
+            <p className="builder-hint builder-scope-hint">
+              {scopeOption.description} · {scopeOption.estimatedRequests}
+              {generationPlan.totalChars > 0 && (
+                <>
+                  {" "}
+                  · {generationPlan.totalChars.toLocaleString()} characters
+                </>
               )}
             </p>
 
-            <div className="builder-actions">
+            {hasFullBook && (
+              <label className="builder-field builder-scan-preview">
+                <span>Text to scan (preview — updates when you change the option above)</span>
+                <textarea
+                  readOnly
+                  value={
+                    scanPreviewText ||
+                    "Not enough readable text in this scan range. Try a different option."
+                  }
+                  rows={10}
+                  className="builder-preview-text"
+                />
+              </label>
+            )}
+
+            {!hasFullBook && (
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="builder-advanced-toggle"
+                onClick={() => setShowPasteText((value) => !value)}
+              >
+                {showPasteText
+                  ? "Hide pasted text"
+                  : "Or paste chapter text instead"}
+              </button>
+            )}
+
+            {(showPasteText || (!hasFullBook && chapterText.length > 0)) && (
+              <label className="builder-field">
+                <span>Chapter text</span>
+                <textarea
+                  value={chapterText}
+                  onChange={(event) => setChapterText(event.target.value)}
+                  rows={8}
+                  placeholder="Paste a chapter here if you do not have an EPUB…"
+                />
+              </label>
+            )}
+
+            {userLlm.loaded && !canExtract && canGenerateContent && (
+              <div
+                className="builder-banner builder-banner-warn builder-api-callout"
+                role="alert"
+              >
+                <strong>API key required</strong>
+                <p>
+                  Before generating your dictionary, expand{" "}
+                  <strong>AI provider &amp; API key</strong> below, enter your
+                  key, and click <strong>Verify &amp; save</strong>.
+                </p>
+              </div>
+            )}
+
+            <button
+              type="button"
+              className={`btn btn-primary builder-generate-btn${
+                !canExtract && canGenerateContent ? " builder-generate-needs-key" : ""
+              }`}
+              disabled={loading || !canGenerateContent}
+              onClick={handleGenerateDictionary}
+            >
+              {loading && bookProgress
+                ? `Generating ${bookProgress.current}/${bookProgress.total}…`
+                : "Generate dictionary"}
+            </button>
+
+            <div className="builder-secondary-actions">
+              <button
+                type="button"
+                className="builder-link-btn"
                 disabled={loading}
                 onClick={handleLoadSample}
               >
                 Try sample chapter
               </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                disabled={loading || !canSubmit}
-                onClick={handleExtract}
-              >
-                {loading ? "Working…" : "Preview entries"}
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={loading || !canSubmit}
-                onClick={handleGenerate}
-              >
-                {loading ? "Working…" : "Generate & download"}
-              </button>
             </div>
+
+            {userLlm.loaded && (
+              <div ref={apiPanelRef}>
+                <ApiKeyPanel
+                  byokRequired={byokRequired}
+                  settings={userLlm.settings}
+                  preset={userLlm.preset}
+                  presets={userLlm.presets}
+                  isConfigured={userLlm.isConfigured}
+                  testStatus={userLlm.testStatus}
+                  testMessage={userLlm.testMessage}
+                  open={apiPanelOpen}
+                  highlighted={apiPanelHighlight}
+                  onOpenChange={setApiPanelOpen}
+                  onPresetChange={userLlm.setPresetId}
+                  onSettingsChange={userLlm.updateSettings}
+                  onTest={() => void userLlm.testSettings()}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -476,7 +684,7 @@ export function DictionaryBuilder() {
                 className="builder-link-btn"
                 onClick={() => setStep("form")}
               >
-                Edit chapter
+                Back to book
               </button>
             </div>
 
@@ -510,9 +718,9 @@ export function DictionaryBuilder() {
                 type="button"
                 className="btn btn-secondary"
                 disabled={loading}
-                onClick={handleGenerate}
+                onClick={handleGenerateDictionary}
               >
-                Regenerate & download
+                Regenerate
               </button>
             </div>
           </div>

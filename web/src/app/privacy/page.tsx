@@ -31,12 +31,19 @@ export default function PrivacyPage() {
       <h2>How we process your content</h2>
       <ul>
         <li>
-          Chapter text is sent to an AI provider (currently OpenAI) to extract
-          names, places, and book-specific terms and to write definitions.
+          During the public beta, you provide your own AI provider API key in
+          the browser. That key is saved locally in your browser storage and
+          sent to our server only when you generate or test a dictionary.
         </li>
         <li>
-          We do <strong>not</strong> use your books or chapter text to train
-          AI models.
+          Book text is sent to your chosen AI provider (Gemini, DeepSeek,
+          OpenAI-compatible gateways, and similar services) to extract names,
+          places, and book-specific terms and to write definitions.
+        </li>
+        <li>
+          We do <strong>not</strong> store your API key in our database after
+          the request finishes, and we do <strong>not</strong> use your books
+          or chapter text to train AI models.
         </li>
         <li>
           Generated dictionary files (HTML, OPF, ZIP, or MOBI) are returned to

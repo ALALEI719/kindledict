@@ -1,7 +1,10 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 
-import { getExtractionModel } from "./llm";
+import {
+  getExtractionModel,
+  resolveLlmCredentials,
+} from "./llm-credentials";
 import type { DictionaryEntry, ExtractRequest } from "./types";
 
 const entrySchema = z.object({
@@ -50,8 +53,10 @@ export async function extractEntries(
     request.spoilerScope?.trim() ||
     "Only use facts explicitly present in the supplied chapter text. Do not spoil later chapters.";
 
+  const credentials = resolveLlmCredentials(request.llm);
+
   const { object } = await generateObject({
-    model: getExtractionModel(),
+    model: getExtractionModel(credentials),
     schema: extractionSchema,
     prompt: `You are building a Kindle companion dictionary (fictionary) for fiction readers.
 

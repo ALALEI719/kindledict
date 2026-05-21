@@ -26,17 +26,31 @@ export interface DictConfig {
   usage_notes?: string[];
 }
 
+export interface ClientLlmConfig {
+  presetId?: string;
+  provider?: "google" | "openai-compatible";
+  apiKey: string;
+  model?: string;
+  baseUrl?: string;
+}
+
 export interface ExtractRequest {
   chapterText: string;
   bookTitle?: string;
   chapterLabel?: string;
   chapterId?: string;
   spoilerScope?: string;
+  llm?: ClientLlmConfig;
 }
 
 export interface BuildRequest {
   entries: DictionaryEntry[];
   config: DictConfig;
+  llm?: ClientLlmConfig;
+}
+
+export interface LlmTestRequest {
+  llm: ClientLlmConfig;
 }
 
 export interface GenerateRequest extends ExtractRequest {

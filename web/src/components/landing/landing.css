@@ -500,6 +500,29 @@
 }
 
 /* Dictionary builder (/app) */
+.landing.builder-page {
+  --accent: #2d4a6f;
+  --accent-dark: #1e334f;
+}
+
+.landing.builder-page .btn-primary {
+  background: linear-gradient(180deg, #2a3f5c 0%, #1e2d42 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.landing.builder-page .btn-primary:hover {
+  background: linear-gradient(180deg, #334d6e 0%, #243550 100%);
+}
+
+.landing.builder-page .builder-upload-zone {
+  border-color: rgba(45, 74, 111, 0.35);
+  background: rgba(45, 74, 111, 0.04);
+}
+
 .landing.builder-page .builder-main {
   padding: 40px 24px 64px;
   max-width: 880px;
@@ -712,6 +735,292 @@
   background: #edf7f1;
   border: 1px solid #b7dfc6;
   color: var(--green);
+}
+
+.landing .builder-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.landing .builder-section-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+.landing .builder-upload-compact {
+  margin-bottom: 0;
+  padding: 18px 20px;
+  text-align: center;
+}
+
+.landing.builder-page .builder-upload-row {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.landing.builder-page .builder-upload-row .builder-hint {
+  text-align: center;
+}
+
+.landing .builder-upload-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  flex-direction: column;
+}
+
+.landing .builder-api-callout {
+  padding: 16px 18px;
+}
+
+.landing .builder-api-callout strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.landing .builder-api-callout p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.landing .builder-generate-needs-key {
+  box-shadow:
+    0 0 0 2px rgba(234, 179, 8, 0.45),
+    0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.landing .builder-scan-preview {
+  margin-top: 4px;
+}
+
+.landing .builder-grid-3 {
+  grid-template-columns: 2fr 1fr;
+}
+
+.landing .builder-scope-hint {
+  margin-top: -4px;
+}
+
+.landing .builder-generate-btn {
+  width: 100%;
+  padding: 16px 24px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-top: 4px;
+}
+
+.landing .builder-preview-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  background: #f8f7f5;
+  color: var(--muted);
+  resize: vertical;
+}
+
+.landing .builder-secondary-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: -4px;
+}
+
+.landing .builder-api-compact {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.landing .builder-api-compact-highlight {
+  border-radius: 8px;
+  padding: 8px 12px 0;
+  margin: 0 -12px;
+  animation: builder-api-pulse 0.8s ease 3;
+}
+
+@keyframes builder-api-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(45, 74, 111, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(45, 74, 111, 0.35);
+  }
+}
+
+.landing .builder-api-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 8px 0;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+
+.landing .builder-api-toggle-label {
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.landing .builder-api-toggle-meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+  flex: 1;
+}
+
+.landing .builder-api-toggle-icon {
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.landing .builder-api-body {
+  padding: 0 0 4px;
+}
+
+.landing .builder-grid-tight {
+  gap: 12px;
+}
+
+.landing .builder-api-key-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.landing .builder-field-grow {
+  flex: 1;
+}
+
+.landing .builder-api-test-btn {
+  white-space: nowrap;
+  margin-bottom: 1px;
+}
+
+.landing .builder-api-inline-msg {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.landing .builder-api-inline-msg.ok {
+  color: var(--green);
+}
+
+.landing .builder-api-inline-msg.err {
+  color: #991b1b;
+}
+
+.landing .builder-api-card {
+  margin-bottom: 20px;
+  border: 1px solid #d7e3f4;
+  background: linear-gradient(180deg, #f8fbff 0%, #fff 100%);
+}
+
+.landing .builder-api-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.landing .builder-api-header h2 {
+  margin: 8px 0;
+  font-size: 1.25rem;
+  text-align: left;
+}
+
+.landing .builder-api-status {
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.landing .builder-api-status-ok {
+  background: #edf7f1;
+  color: var(--green);
+}
+
+.landing .builder-api-status-warn {
+  background: #fff8e6;
+  color: #7a5b00;
+}
+
+.landing .builder-book-ready {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #f0c987;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fff9f0 0%, #fff 100%);
+}
+
+.landing .builder-book-ready h2 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  text-align: left;
+}
+
+.landing .builder-book-btn {
+  align-self: flex-start;
+  min-width: 240px;
+}
+
+.landing .builder-advanced-toggle {
+  margin-top: 16px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.landing .builder-progress {
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  background: #eef4ff;
+  border: 1px solid #c8d9fb;
+}
+
+.landing .builder-progress-label {
+  font-size: 0.9rem;
+  color: #2a4a7a;
+  margin-bottom: 10px;
+}
+
+.landing .builder-progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: #dbeafe;
+  overflow: hidden;
+}
+
+.landing .builder-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #f59e0b);
+  transition: width 0.3s ease;
 }
 
 .landing .builder-preview-header {

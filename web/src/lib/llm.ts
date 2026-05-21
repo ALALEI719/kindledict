@@ -1,6 +1,9 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createOpenAI } from "@ai-sdk/openai";
-import type { LanguageModel } from "ai";
+import {
+  isByokRequired,
+  resolveLlmCredentials,
+  resolveServerCredentials,
+} from "./llm-credentials";
+import type { ClientLlmConfig } from "./types";
 
 export type LlmProviderName = "google" | "openai-compatible";
 
@@ -9,88 +12,37 @@ export interface LlmConfig {
   model: string;
   ready: boolean;
   setupHint: string;
+  byokRequired: boolean;
+  serverConfigured: boolean;
 }
 
-function resolveProviderName(): LlmProviderName | null {
-  const explicit = process.env.LLM_PROVIDER?.trim().toLowerCase();
-  if (explicit === "google" || explicit === "gemini") return "google";
-  if (explicit === "openai" || explicit === "openai-compatible") {
-    return "openai-compatible";
-  }
+export function getLlmConfig(client?: ClientLlmConfig | null): LlmConfig {
+  const byokRequired = isByokRequired();
+  const server = resolveServerCredentials();
 
-  if (process.env.GOOGLE_GENERATIVE_AI_API_KEY?.trim()) return "google";
-  if (
-    process.env.OPENAI_API_KEY?.trim() ||
-    process.env.OPENAI_COMPAT_API_KEY?.trim()
-  ) {
-    return "openai-compatible";
-  }
-
-  return null;
-}
-
-export function getLlmConfig(): LlmConfig {
-  const provider = resolveProviderName();
-
-  if (provider === "google") {
-    const ready = Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY?.trim());
+  try {
+    const resolved = resolveLlmCredentials(client);
     return {
-      provider: "google",
-      model:
-        process.env.GOOGLE_CHAT_MODEL?.trim() ||
-        process.env.GEMINI_MODEL?.trim() ||
-        "gemini-2.0-flash",
-      ready,
+      provider: resolved.provider,
+      model: resolved.model,
+      ready: true,
       setupHint:
-        "Set GOOGLE_GENERATIVE_AI_API_KEY from Google AI Studio (free tier available, no OpenAI account needed).",
+        resolved.source === "client"
+          ? "Using your API key for this request."
+          : "Server AI provider configured.",
+      byokRequired,
+      serverConfigured: Boolean(server),
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "AI provider not configured.";
+    return {
+      provider: server?.provider ?? "google",
+      model: server?.model ?? "gemini-2.5-flash",
+      ready: false,
+      setupHint: message,
+      byokRequired,
+      serverConfigured: Boolean(server),
     };
   }
-
-  if (provider === "openai-compatible") {
-    const ready = Boolean(
-      process.env.OPENAI_API_KEY?.trim() ||
-        process.env.OPENAI_COMPAT_API_KEY?.trim(),
-    );
-    return {
-      provider: "openai-compatible",
-      model: process.env.OPENAI_CHAT_MODEL?.trim() || "gpt-4o-mini",
-      ready,
-      setupHint:
-        "Set OPENAI_API_KEY. For DeepSeek/Moonshot/OpenRouter, also set OPENAI_COMPAT_BASE_URL.",
-    };
-  }
-
-  return {
-    provider: "google",
-    model: "gemini-2.0-flash",
-    ready: false,
-    setupHint:
-      "No LLM key found. Easiest without foreign payment: GOOGLE_GENERATIVE_AI_API_KEY (Gemini). Alternative: DeepSeek with OPENAI_COMPAT_BASE_URL.",
-  };
-}
-
-export function getExtractionModel(): LanguageModel {
-  const config = getLlmConfig();
-
-  if (!config.ready) {
-    throw new Error(config.setupHint);
-  }
-
-  if (config.provider === "google") {
-    const google = createGoogleGenerativeAI({
-      apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-    });
-    return google(config.model);
-  }
-
-  const apiKey =
-    process.env.OPENAI_API_KEY?.trim() ||
-    process.env.OPENAI_COMPAT_API_KEY?.trim();
-
-  const openai = createOpenAI({
-    apiKey,
-    baseURL: process.env.OPENAI_COMPAT_BASE_URL?.trim() || undefined,
-  });
-
-  return openai(config.model);
 }
