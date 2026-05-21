@@ -503,28 +503,27 @@ export function DictionaryBuilder() {
                   if (file) void handleEpubUpload(file);
                 }}
               />
-              <div className="builder-source-actions">
+              <div className="builder-source-primary">
                 <button
                   type="button"
-                  className={`btn btn-primary${hasFullBook ? " builder-source-active" : ""}`}
+                  className="btn btn-primary builder-epub-btn"
                   disabled={loading}
                   onClick={() => epubInputRef.current?.click()}
                 >
                   Choose EPUB
                 </button>
-                <button
-                  type="button"
-                  className={`btn btn-secondary${showPasteText && !hasFullBook ? " builder-source-active" : ""}`}
-                  disabled={loading || hasFullBook}
-                  onClick={() => {
-                    if (hasFullBook) return;
-                    setShowPasteText((value) => !value);
-                  }}
-                >
-                  {showPasteText
-                    ? "Hide pasted text"
-                    : "Or paste chapter text instead"}
-                </button>
+                {!hasFullBook && (
+                  <button
+                    type="button"
+                    className="builder-source-alt"
+                    disabled={loading}
+                    onClick={() => setShowPasteText((value) => !value)}
+                  >
+                    {showPasteText
+                      ? "Hide pasted text"
+                      : "Or paste chapter text instead"}
+                  </button>
+                )}
               </div>
               {(showPasteText || (!hasFullBook && chapterText.length > 0)) && (
                 <label className="builder-field builder-paste-field">
