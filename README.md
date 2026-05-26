@@ -18,14 +18,18 @@ KindleDict/
 - Landing page at `/`
 - Dictionary builder at `/app` — **paste chapter or upload DRM-free EPUB**
 - APIs: `/api/extract`, `/api/build`, `/api/generate`, `/api/parse-epub`, `/api/health`
-- Downloads Kindle source ZIP (open `dict.opf` in Kindle Previewer → export `.mobi`)
-- Sample chapter button for demo (`/samples/acok-ch04.txt`)
+- Downloads `.mobi` directly when `COMPILE_WORKER_URL` is configured
+- Falls back to Kindle source ZIP (open `dict.opf` in Kindle Previewer → export `.mobi`)
+- Sample chapter demo at `/app?sample=1` (`/samples/acok-ch04.txt`)
+- Homepage pricing section can point to a paid beta checkout link
 
 See [MVP.md](./MVP.md) for launch checklist.
 
-## Phase 2: Railway worker
+## Compile worker
 
-When `COMPILE_WORKER_URL` is set on Vercel, `/api/generate` returns `.mobi` directly.
+When `COMPILE_WORKER_URL` is set on Vercel, `/api/build` and `/api/generate`
+return `.mobi` directly. If the worker is unavailable, the app falls back to
+ZIP unless `COMPILE_WORKER_FALLBACK_ZIP=false`.
 
 ### Deploy worker to Railway
 
@@ -66,6 +70,8 @@ In [Vercel Dashboard](https://vercel.com/alalei719s-projects/kindledict) → Pro
 | `OPENAI_CHAT_MODEL` | No | Default `gpt-4o-mini` |
 | `COMPILE_WORKER_URL` | No | Railway worker URL (Phase 2) |
 | `COMPILE_WORKER_SECRET` | No | Must match worker |
+| `KINDLE_DICT_BYOK_REQUIRED` | No | Set `false` for hosted AI generation; `true` for BYOK demos |
+| `NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL` | No | Paid beta checkout/payment link shown on pricing card |
 
 Or via CLI:
 

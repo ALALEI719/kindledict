@@ -31,8 +31,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setLocaleState(readStoredLocale());
-    setHydrated(true);
+    queueMicrotask(() => {
+      setLocaleState(readStoredLocale());
+      setHydrated(true);
+    });
   }, []);
 
   useEffect(() => {

@@ -10,6 +10,7 @@ export const en = {
     buildDictionary: "Build dictionary",
     howItWorks: "How it works",
     features: "Features",
+    pricing: "Pricing",
     faq: "FAQ",
     backHome: "← Back to home",
     footerTagline:
@@ -139,6 +140,36 @@ export const en = {
         body: "When the hard word is also a proper noun or book-specific term, standard learner dictionaries won't help.",
       },
     ],
+    demoTitle: "Run the full flow with a sample chapter",
+    demoSub:
+      "Try KindleDict without uploading your own book: load the sample chapter, generate entries, and download the Kindle dictionary file.",
+    demoCta: "Open sample chapter",
+    pricingTitle: "Paid beta validation",
+    pricingSub:
+      "Keep the free trial, but make willingness to pay measurable before building heavier account and billing infrastructure.",
+    pricingPlans: [
+      {
+        name: "Chapter trial",
+        price: "Free",
+        body: "Best for checking extraction quality and the Kindle install flow.",
+        cta: "Try free",
+        href: "/app?sample=1",
+      },
+      {
+        name: "Full-book generation",
+        price: "$3.99 / book",
+        body: "For serious readers; connect a payment link when you are ready to charge.",
+        cta: "Join paid beta",
+        href: "/contact",
+      },
+      {
+        name: "Author / publisher",
+        price: "From $49",
+        body: "Create companion dictionaries for books you own or publish.",
+        cta: "Contact us",
+        href: "/contact",
+      },
+    ],
     faqTitle: "Frequently asked questions",
     faqs: [
       {
@@ -209,15 +240,25 @@ export const en = {
     backToBook: "Back to book",
     also: "Also",
     downloadZip: "Download dictionary ZIP",
+    downloadMobi: "Download Kindle dictionary .mobi",
     regenerate: "Regenerate",
     installTitle: "Install on Kindle",
-    installSteps: [
+    installStepsZip: [
       "If you downloaded a ZIP, open dict.opf in Kindle Previewer 3 and export as .mobi.",
       "Copy the .mobi to documents/dictionaries/ on your Kindle (USB or email).",
       "While reading, long-press a word. If another dictionary opens, tap its name and switch to this one.",
     ],
+    installStepsMobi: [
+      "Copy the downloaded .mobi to documents/dictionaries/ on your Kindle (USB or email).",
+      "In Kindle Settings → Language & Dictionaries, choose this dictionary; or switch from the dictionary popup.",
+      "Long-press character names, places, or terms while reading to see the definition.",
+    ],
     downloadedZip:
       "Downloaded ZIP — open dict.opf in Kindle Previewer 3 → Export .mobi",
+    downloadedMobi:
+      "Downloaded .mobi — copy it to documents/dictionaries/ on your Kindle and select it as a dictionary",
+    hostedAiReady:
+      "Hosted AI is enabled: you do not need to enter your own API key for this generation.",
     progressChapter: "Chapter {current} of {total}:",
     loadingSample: "Loading sample chapter…",
     readingEpub: "Reading EPUB…",

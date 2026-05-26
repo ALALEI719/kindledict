@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 
+import { hasCompileWorker } from "@/lib/compile-worker";
 import { isByokRequired, resolveServerCredentials } from "@/lib/llm-credentials";
 import { LLM_PRESETS } from "@/lib/llm-presets";
 
 export async function GET() {
   const server = resolveServerCredentials();
   const byokRequired = isByokRequired();
-  const hasCompileWorker = Boolean(process.env.COMPILE_WORKER_URL?.trim());
+  const mobiCompile = hasCompileWorker();
 
   return NextResponse.json({
     ok: true,
@@ -25,7 +26,8 @@ export async function GET() {
     },
     features: {
       extract: true,
-      mobiCompile: hasCompileWorker,
+      mobiCompile,
+      hostedAi: Boolean(server) && !byokRequired,
     },
     llm: server && !byokRequired
       ? {

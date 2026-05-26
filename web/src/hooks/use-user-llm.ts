@@ -30,9 +30,11 @@ export function useUserLlm() {
   const [testMessage, setTestMessage] = useState("");
 
   useEffect(() => {
-    const stored = loadStoredUserLlmSettings();
-    if (stored) setSettings(stored);
-    setLoaded(true);
+    queueMicrotask(() => {
+      const stored = loadStoredUserLlmSettings();
+      if (stored) setSettings(stored);
+      setLoaded(true);
+    });
   }, []);
 
   const preset = useMemo(

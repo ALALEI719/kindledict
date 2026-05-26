@@ -66,6 +66,11 @@ function buildLlmPayload(clientConfig: ClientLlmConfig | null) {
   return clientConfig ? { llm: clientConfig } : {};
 }
 
+function filenameFromDisposition(value: string | null): string | null {
+  const match = value?.match(/filename="?([^";]+)"?/i);
+  return match?.[1] ?? null;
+}
+
 export function DictionaryBuilder() {
   const { locale, messages: m } = useLocale();
   const b = m.builder;
@@ -89,12 +94,12 @@ export function DictionaryBuilder() {
     null,
   );
   const [serviceReady, setServiceReady] = useState<boolean | null>(null);
+  const [mobiCompileReady, setMobiCompileReady] = useState(false);
   const [byokRequired, setByokRequired] = useState(true);
   const userLlm = useUserLlm();
 
   const [epubFileName, setEpubFileName] = useState<string | null>(null);
   const [epubChapters, setEpubChapters] = useState<EpubChapterOption[]>([]);
-  const [selectedChapterId, setSelectedChapterId] = useState("");
   const [bookProgress, setBookProgress] = useState<{
     current: number;
     total: number;
@@ -106,6 +111,7 @@ export function DictionaryBuilder() {
   const [showPasteText, setShowPasteText] = useState(false);
   const [apiPanelOpen, setApiPanelOpen] = useState(false);
   const [apiPanelHighlight, setApiPanelHighlight] = useState(false);
+  const sampleLoadedFromUrlRef = useRef(false);
 
   const extractableChapters = useMemo(
     () => filterExtractableChapters(epubChapters),
@@ -201,20 +207,33 @@ export function DictionaryBuilder() {
       const data = await response.json();
       setByokRequired(Boolean(data.beta?.byokRequired));
       setServiceReady(Boolean(data.ready));
+      setMobiCompileReady(Boolean(data.features?.mobiCompile));
     } catch {
       setServiceReady(false);
+      setMobiCompileReady(false);
     }
   }, []);
 
   useEffect(() => {
-    checkHealth();
+    queueMicrotask(() => {
+      void checkHealth();
+    });
   }, [checkHealth]);
 
   useEffect(() => {
     if (userLlm.loaded && !userLlm.isConfigured && byokRequired) {
-      setApiPanelOpen(true);
+      queueMicrotask(() => setApiPanelOpen(true));
     }
   }, [userLlm.loaded, userLlm.isConfigured, byokRequired]);
+
+  useEffect(() => {
+    if (sampleLoadedFromUrlRef.current) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("sample") !== "1") return;
+    sampleLoadedFromUrlRef.current = true;
+    void handleLoadSample();
+  });
 
   async function handleLoadSample() {
     setError(null);
@@ -255,7 +274,6 @@ export function DictionaryBuilder() {
     setLoadingMessage(b.readingEpub);
     setEpubFileName(file.name);
     setEpubChapters([]);
-    setSelectedChapterId("");
 
     try {
       let buffer: ArrayBuffer;
@@ -277,11 +295,6 @@ export function DictionaryBuilder() {
 
       setEpubChapters(chapters);
       if (parsed.title) setBookTitle(parsed.title);
-
-      const first = chapters[0];
-      if (first) {
-        setSelectedChapterId(first.id);
-      }
       setShowPasteText(false);
     } catch (err) {
       const message = friendlyFetchError(
@@ -342,7 +355,7 @@ export function DictionaryBuilder() {
     return data.entries as DictionaryEntry[];
   }
 
-  async function downloadDictionaryZip(
+  async function downloadDictionaryFile(
     dictionaryEntries: DictionaryEntry[],
     scopeLabel: string,
     fileSlug: string,
@@ -371,13 +384,18 @@ export function DictionaryBuilder() {
     }
 
     const blob = await response.blob();
+    const format =
+      response.headers.get("X-KindleDict-Format") === "mobi" ? "mobi" : "zip";
+    const filename =
+      filenameFromDisposition(response.headers.get("Content-Disposition")) ??
+      `kindledict-${fileSlug}.${format === "mobi" ? "mobi" : "zip"}`;
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `kindledict-${fileSlug}.zip`;
+    anchor.download = filename;
     anchor.click();
     URL.revokeObjectURL(url);
-    setDownloadFormat("zip");
+    setDownloadFormat(format);
   }
 
   async function handleGenerateDictionary() {
@@ -438,7 +456,7 @@ export function DictionaryBuilder() {
       setChapterLabel(generationPlan.scopeLabel);
       setLoadingMessage(b.packaging);
 
-      await downloadDictionaryZip(
+      await downloadDictionaryFile(
         merged,
         generationPlan.scopeLabel,
         slugify(`${bookTitle || "book"}-${generationScope}`),
@@ -489,13 +507,20 @@ export function DictionaryBuilder() {
       }
 
       const blob = await response.blob();
+      const format =
+        response.headers.get("X-KindleDict-Format") === "mobi" ? "mobi" : "zip";
+      const filename =
+        filenameFromDisposition(response.headers.get("Content-Disposition")) ??
+        `kindledict-${slugify(chapterLabel || chapterId)}.${
+          format === "mobi" ? "mobi" : "zip"
+        }`;
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `kindledict-${slugify(chapterLabel || chapterId)}.zip`;
+      anchor.download = filename;
       anchor.click();
       URL.revokeObjectURL(url);
-      setDownloadFormat("zip");
+      setDownloadFormat(format);
     } catch (err) {
       setError(err instanceof Error ? err.message : b.errors.generic);
     } finally {
@@ -554,7 +579,7 @@ export function DictionaryBuilder() {
 
         {downloadFormat && (
           <div className="builder-banner builder-banner-success">
-            {b.downloadedZip}
+            {downloadFormat === "mobi" ? b.downloadedMobi : b.downloadedZip}
           </div>
         )}
 
@@ -720,9 +745,15 @@ export function DictionaryBuilder() {
                 disabled={loading}
                 onClick={handleLoadSample}
               >
-                {b.trySample}
-              </button>
-            </div>
+                  {b.trySample}
+                </button>
+              </div>
+
+            {serviceReady === true && !byokRequired && (
+              <div className="builder-banner builder-banner-success">
+                {b.hostedAiReady}
+              </div>
+            )}
 
             {userLlm.loaded && (
               <div ref={apiPanelRef}>
@@ -786,7 +817,7 @@ export function DictionaryBuilder() {
                 disabled={loading}
                 onClick={handleDownloadZipFromPreview}
               >
-                {b.downloadZip}
+                {mobiCompileReady ? b.downloadMobi : b.downloadZip}
               </button>
               <button
                 type="button"
@@ -803,7 +834,7 @@ export function DictionaryBuilder() {
         <section className="builder-install">
           <h3>{b.installTitle}</h3>
           <ol>
-            {b.installSteps.map((step) => (
+            {(mobiCompileReady ? b.installStepsMobi : b.installStepsZip).map((step) => (
               <li key={step}>{step}</li>
             ))}
           </ol>

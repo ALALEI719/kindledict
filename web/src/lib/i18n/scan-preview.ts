@@ -2,9 +2,10 @@ import type { GenerationPlan } from "@/lib/generation-scope";
 import type { Locale } from "@/lib/i18n/locale";
 import { formatMessage, getMessages } from "@/lib/i18n/messages";
 
-export function buildLocalizedScanPreviewText<
-  T extends { text: string; label: string; id: string },
->(plan: GenerationPlan<T>, locale: Locale): string {
+export function buildLocalizedScanPreviewText(
+  plan: GenerationPlan,
+  locale: Locale,
+): string {
   const labels = getMessages(locale).builder.scopeLabels;
   if (plan.chapters.length === 0) return "";
 

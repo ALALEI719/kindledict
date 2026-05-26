@@ -6,7 +6,19 @@
 - Builder: https://kindledict.vercel.app/app
 - Privacy / Terms / Contact pages
 
-## Public beta model (BYOK)
+## P0 commercialization defaults
+
+For a low-friction paid beta, prefer:
+
+1. Hosted AI generation (`KINDLE_DICT_BYOK_REQUIRED=false` + server-side LLM key)
+2. Direct `.mobi` downloads (`COMPILE_WORKER_URL` + `COMPILE_WORKER_SECRET`)
+3. Sample flow from `/app?sample=1`
+4. Paid beta checkout link via `NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL`
+
+Keep BYOK available as a fallback/self-host mode, but do not make it the primary
+path for non-technical users.
+
+## Public beta model (BYOK fallback)
 
 Hosted demo uses **Bring Your Own Key**:
 
@@ -62,22 +74,23 @@ If `KINDLE_DICT_BYOK_REQUIRED` is not `true`, you can still configure server key
    - Hobby plan limits serverless functions to 10 seconds
    - Chapter extraction often needs 30–120 seconds
 
-## MVP flow (working end-to-end)
+## P0 flow (working end-to-end)
 
 ```
 Paste chapter OR upload DRM-free EPUB
   → pick chapter (if EPUB)
   → Preview entries OR Generate & download
-  → ZIP with dict.opf + content.html
-  → Kindle Previewer 3 → export .mobi
+  → direct .mobi when compile worker is configured
+  → fallback ZIP with dict.opf + content.html when no worker is configured
   → sideload to Kindle documents/dictionaries/
 ```
 
-## Optional Phase 2
+## Compile worker
 
 - Deploy `worker/` to Railway
 - Set `COMPILE_WORKER_URL` + `COMPILE_WORKER_SECRET` on Vercel for direct `.mobi` download
+- Leave `COMPILE_WORKER_FALLBACK_ZIP=true` during beta to avoid blocking users
 
 ## Try without your own book
 
-Click **Try sample chapter** on `/app` — loads A Clash of Kings Ch. 4 excerpt.
+Open `/app?sample=1` or click **Try sample chapter** on `/app` — loads A Clash of Kings Ch. 4 excerpt.

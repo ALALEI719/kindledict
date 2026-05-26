@@ -55,14 +55,14 @@ export const GENERATION_SCOPES: GenerationScopeOption[] = [
   },
 ];
 
-export interface ScopedChapter<T extends { text: string; label: string; id: string }> {
+export interface ScopedChapter {
   id: string;
   label: string;
   text: string;
 }
 
-export interface GenerationPlan<T extends { text: string; label: string; id: string }> {
-  chapters: ScopedChapter<T>[];
+export interface GenerationPlan {
+  chapters: ScopedChapter[];
   totalChars: number;
   scopeLabel: string;
   requestCount: number;
@@ -88,7 +88,7 @@ export function buildGenerationPlan<
   scopeId: GenerationScopeId,
   customCharLimit?: number,
   locale: Locale = DEFAULT_LOCALE,
-): GenerationPlan<T> {
+): GenerationPlan {
   const scopeLabels = getMessages(locale).builder.scopeLabels;
   const readable = chapters.filter((chapter) => chapter.text.trim().length >= 100);
 
@@ -183,9 +183,7 @@ export function getGenerationScopeOption(
   );
 }
 
-export function buildScanPreviewText<
-  T extends { text: string; label: string; id: string },
->(plan: GenerationPlan<T>): string {
+export function buildScanPreviewText(plan: GenerationPlan): string {
   if (plan.chapters.length === 0) return "";
 
   if (plan.requestCount === 1) {

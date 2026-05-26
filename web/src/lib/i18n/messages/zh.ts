@@ -10,6 +10,7 @@ export const zh = {
     buildDictionary: "生成词典",
     howItWorks: "使用流程",
     features: "功能",
+    pricing: "价格",
     faq: "常见问题",
     backHome: "← 返回首页",
     footerTagline: "© 2026 KindleDict · 为深度阅读者定制的 Kindle 词典",
@@ -136,6 +137,36 @@ export const zh = {
         body: "难词若是专名或书中术语，学习者词典同样帮不上忙。",
       },
     ],
+    demoTitle: "先用示例章节跑通一次",
+    demoSub:
+      "不上传自己的书也可以体验完整流程：加载示例章节、生成词条、下载 Kindle 词典文件。",
+    demoCta: "打开示例章节",
+    pricingTitle: "商业化验证价",
+    pricingSub:
+      "公测期先验证读者是否愿意为完整书籍生成付费，免费试用仍保留。",
+    pricingPlans: [
+      {
+        name: "章节试用",
+        price: "免费",
+        body: "适合确认识别质量和 Kindle 安装流程。",
+        cta: "免费试用",
+        href: "/app?sample=1",
+      },
+      {
+        name: "单本完整生成",
+        price: "$3.99 / 本",
+        body: "面向愿意付费的重度读者；接入支付链接后可直接售卖。",
+        cta: "加入付费公测",
+        href: "/contact",
+      },
+      {
+        name: "作者/出版方",
+        price: "$49 起",
+        body: "为自有作品制作读者伴侣词典，版权边界更清晰。",
+        cta: "联系定制",
+        href: "/contact",
+      },
+    ],
     faqTitle: "常见问题",
     faqs: [
       {
@@ -205,15 +236,23 @@ export const zh = {
     backToBook: "返回编辑",
     also: "亦作",
     downloadZip: "下载词典 ZIP",
+    downloadMobi: "下载 Kindle 词典 .mobi",
     regenerate: "重新生成",
     installTitle: "安装到 Kindle",
-    installSteps: [
+    installStepsZip: [
       "若下载的是 ZIP，用 Kindle Previewer 3 打开 dict.opf，导出为 .mobi。",
       "将 .mobi 复制到 Kindle 的 documents/dictionaries/（USB 或邮件）。",
       "阅读时长按单词；若弹出其他词典，点顶部名称切换为本词典。",
     ],
+    installStepsMobi: [
+      "将下载的 .mobi 复制到 Kindle 的 documents/dictionaries/（USB 或邮件）。",
+      "在 Kindle 设置 → 语言与词典 中选择这本词典；或查词时点顶部词典名切换。",
+      "阅读时长按人物名、地名或术语，即可在词典弹窗中查看释义。",
+    ],
     downloadedZip:
       "ZIP 已下载 — 用 Kindle Previewer 3 打开 dict.opf → 导出 .mobi",
+    downloadedMobi: ".mobi 已下载 — 复制到 Kindle 的 documents/dictionaries/ 后即可选择使用",
+    hostedAiReady: "托管 AI 已启用：本次生成不需要填写自己的 API Key。",
     progressChapter: "第 {current} / {total} 章：",
     loadingSample: "正在加载示例章节……",
     readingEpub: "正在读取 EPUB……",
