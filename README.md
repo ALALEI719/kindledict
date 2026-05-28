@@ -70,6 +70,7 @@ In [Vercel Dashboard](https://vercel.com/alalei719s-projects/kindledict) → Pro
 |----------|----------|---------------|
 | `KINDLE_DICT_BYOK_REQUIRED` | Yes | `false` — hosted AI; users do not need their own API key |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Yes | Gemini key from Google AI Studio |
+| `COMPILE_WORKER_URL` | Yes | Railway worker URL for direct `.mobi` download (Production + Preview) |
 | `LLM_PROVIDER` | No | Optional; omit or set `google` (auto-detected from Gemini key) |
 | `GOOGLE_CHAT_MODEL` | No | Optional; defaults to `gemini-2.5-flash` |
 
@@ -77,8 +78,7 @@ In [Vercel Dashboard](https://vercel.com/alalei719s-projects/kindledict) → Pro
 
 | Variable | Notes |
 |----------|-------|
-| `COMPILE_WORKER_URL` | Railway worker URL for direct `.mobi` download |
-| `COMPILE_WORKER_SECRET` | Must match worker |
+| `COMPILE_WORKER_SECRET` | Must match worker; required for worker auth once set on Railway |
 | `COMPILE_WORKER_FALLBACK_ZIP` | Default `true`; set `false` to fail instead of ZIP fallback |
 | `NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL` | Paid beta checkout link on homepage pricing card |
 

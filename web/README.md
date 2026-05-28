@@ -5,11 +5,12 @@ dictionary downloads.
 
 ## P0 Runtime
 
-Production on Vercel currently uses hosted Gemini generation:
+Production on Vercel currently uses hosted Gemini generation and a compile worker:
 
 ```bash
 KINDLE_DICT_BYOK_REQUIRED=false
 GOOGLE_GENERATIVE_AI_API_KEY=...
+COMPILE_WORKER_URL=...          # configured on Production + Preview
 # Optional — auto-detected when omitted:
 # LLM_PROVIDER=google
 # GOOGLE_CHAT_MODEL=gemini-2.5-flash
@@ -18,8 +19,7 @@ GOOGLE_GENERATIVE_AI_API_KEY=...
 Add when ready:
 
 ```bash
-COMPILE_WORKER_URL=...
-COMPILE_WORKER_SECRET=...
+COMPILE_WORKER_SECRET=...       # must match Railway worker
 NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL=...
 ```
 
