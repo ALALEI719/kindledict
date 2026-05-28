@@ -6,11 +6,13 @@ import {
 } from "@/lib/build-dictionary";
 import { compileWithWorker } from "@/lib/compile-worker";
 import { createDictionaryZip } from "@/lib/create-zip";
+import { getAccountAccessStateFromCookieHeader } from "@/lib/supabase/server";
 import {
   createTrialCookieValue,
   getTrialCookieMaxAge,
   getTrialCookieName,
   getTrialStateFromCookieHeader,
+  mergeAccessState,
 } from "@/lib/trial-access";
 import type { BuildRequest } from "@/lib/types";
 
@@ -19,7 +21,11 @@ export const maxDuration = 60;
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as BuildRequest;
-    const access = getTrialStateFromCookieHeader(request.headers.get("cookie"));
+    const cookieHeader = request.headers.get("cookie");
+    const access = mergeAccessState(
+      getTrialStateFromCookieHeader(cookieHeader),
+      await getAccountAccessStateFromCookieHeader(cookieHeader),
+    );
 
     if (body.usageMode !== "sample" && body.usageMode !== "paid" && !access.freeChapterRemaining) {
       throw new Error(

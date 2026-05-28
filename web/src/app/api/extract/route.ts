@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
 
 import { extractEntries } from "@/lib/extract-entries";
+import { getAccountAccessStateFromCookieHeader } from "@/lib/supabase/server";
 import type { ExtractRequest } from "@/lib/types";
-import { getTrialStateFromCookieHeader } from "@/lib/trial-access";
+import { getTrialStateFromCookieHeader, mergeAccessState } from "@/lib/trial-access";
 
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ExtractRequest;
-    const access = getTrialStateFromCookieHeader(request.headers.get("cookie"));
+    const cookieHeader = request.headers.get("cookie");
+    const access = mergeAccessState(
+      getTrialStateFromCookieHeader(cookieHeader),
+      await getAccountAccessStateFromCookieHeader(cookieHeader),
+    );
 
     if (body.usageMode !== "sample" && body.usageMode !== "paid") {
       if (!access.freeChapterRemaining) {

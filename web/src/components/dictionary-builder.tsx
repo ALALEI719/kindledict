@@ -634,6 +634,7 @@ export function DictionaryBuilder() {
           </Link>
           <div className="nav-links">
             <Link href="/">{m.common.home}</Link>
+            <Link href="/account">{m.common.account}</Link>
             <Link href="/privacy">{m.common.privacy}</Link>
             <LanguageSwitcher />
           </div>

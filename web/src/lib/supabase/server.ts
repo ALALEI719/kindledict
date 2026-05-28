@@ -7,6 +7,26 @@ export type CookieAdapter = {
   setAll?: (cookies: { name: string; value: string; options: CookieOptions }[]) => void;
 };
 
+export function parseCookieHeader(
+  cookieHeader: string | null | undefined,
+): { name: string; value: string }[] {
+  if (!cookieHeader) return [];
+
+  return cookieHeader
+    .split(";")
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map((chunk) => {
+      const index = chunk.indexOf("=");
+      return index >= 0
+        ? {
+            name: chunk.slice(0, index),
+            value: chunk.slice(index + 1),
+          }
+        : { name: chunk, value: "" };
+    });
+}
+
 export function createSupabaseServerClient(cookieAdapter: CookieAdapter) {
   const { url, anonKey } = getSupabaseConfig();
 
@@ -81,4 +101,14 @@ export async function getAccountAccessState(cookieAdapter: CookieAdapter): Promi
     accessStatus,
     planSlug,
   };
+}
+
+export async function getAccountAccessStateFromCookieHeader(
+  cookieHeader: string | null | undefined,
+): Promise<AccountAccessState> {
+  return getAccountAccessState({
+    getAll() {
+      return parseCookieHeader(cookieHeader);
+    },
+  });
 }

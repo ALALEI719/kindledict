@@ -21,8 +21,17 @@ COMPILE_WORKER_FALLBACK_ZIP=...     # Production + Preview
 Add when ready:
 
 ```bash
+KINDLE_DICT_TRIAL_SECRET=...
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL=...
 ```
+
+With Supabase configured, `/account` supports email magic-link sign-in and paid
+access can follow the user across browsers. Run
+[supabase/customer_access.sql](</Users/issuser/Library/Mobile%20Documents/com~apple~CloudDocs/KindleDict/supabase/customer_access.sql>)
+in your Supabase SQL editor, then mark paid users as `active` in
+`public.customer_access` until a payment webhook is connected.
 
 With `COMPILE_WORKER_URL` set, `/api/build` returns a Kindle `.mobi` file.
 Without it, the app falls back to a ZIP containing `dict.opf` and source HTML.

@@ -3,13 +3,18 @@ import { NextResponse } from "next/server";
 import { hasCompileWorker } from "@/lib/compile-worker";
 import { isByokRequired, resolveServerCredentials } from "@/lib/llm-credentials";
 import { LLM_PRESETS } from "@/lib/llm-presets";
-import { getTrialStateFromCookieHeader } from "@/lib/trial-access";
+import { getAccountAccessStateFromCookieHeader } from "@/lib/supabase/server";
+import { getTrialStateFromCookieHeader, mergeAccessState } from "@/lib/trial-access";
 
 export async function GET(request: Request) {
   const server = resolveServerCredentials();
   const byokRequired = isByokRequired();
   const mobiCompile = hasCompileWorker();
-  const access = getTrialStateFromCookieHeader(request.headers.get("cookie"));
+  const cookieHeader = request.headers.get("cookie");
+  const access = mergeAccessState(
+    getTrialStateFromCookieHeader(cookieHeader),
+    await getAccountAccessStateFromCookieHeader(cookieHeader),
+  );
 
   return NextResponse.json({
     ok: true,

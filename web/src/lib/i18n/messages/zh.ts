@@ -3,6 +3,7 @@ import type { GenerationScopeId } from "@/lib/generation-scope";
 export const zh = {
   common: {
     home: "首页",
+    account: "账户",
     privacy: "隐私政策",
     terms: "服务条款",
     contact: "联系我们",

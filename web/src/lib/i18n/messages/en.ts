@@ -3,6 +3,7 @@ import type { GenerationScopeId } from "@/lib/generation-scope";
 export const en = {
   common: {
     home: "Home",
+    account: "Account",
     privacy: "Privacy",
     terms: "Terms",
     contact: "Contact",

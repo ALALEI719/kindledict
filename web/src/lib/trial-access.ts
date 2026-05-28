@@ -79,6 +79,19 @@ export function getTrialStateFromCookieHeader(cookieHeader: string | null | unde
   };
 }
 
+export function mergeAccessState(
+  trial: TrialAccessState,
+  account: { paid: boolean } | null | undefined,
+): TrialAccessState {
+  if (!account?.paid) return trial;
+
+  return {
+    ...trial,
+    paid: true,
+    sampleAllowed: true,
+  };
+}
+
 export function createTrialCookieValue(freeChapterUsed: boolean): string {
   return serialize({ v: 1, freeChapterUsed });
 }

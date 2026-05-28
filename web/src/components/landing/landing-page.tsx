@@ -40,6 +40,7 @@ export function LandingPage() {
             <a href="#features">{m.common.features}</a>
             <a href="#pricing">{m.common.pricing}</a>
             <a href="#faq">{m.common.faq}</a>
+            <Link href="/account">{m.common.account}</Link>
             <LanguageSwitcher />
             <Link href="/app" className="btn btn-primary">
               {m.common.tryFree}
