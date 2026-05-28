@@ -13,7 +13,12 @@ import {
   type GenerationScopeId,
 } from "@/lib/generation-scope";
 import { friendlyFetchError, readApiJson } from "@/lib/api-response";
-import { splitChaptersForExtract, truncateForExtract } from "@/lib/chapter-limits";
+import {
+  MAX_FULL_BOOK_EXTRACT_CHARS,
+  MAX_FULL_BOOK_REQUESTS,
+  splitChaptersForExtract,
+  truncateForExtract,
+} from "@/lib/chapter-limits";
 import { MAX_EPUB_BYTES, parseEpubBuffer } from "@/lib/parse-epub";
 import { ApiKeyPanel } from "@/components/api-key-panel";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -31,6 +36,12 @@ interface EpubChapterOption {
   id: string;
   label: string;
   text: string;
+}
+
+interface AccessState {
+  freeChapterRemaining: boolean;
+  paid: boolean;
+  sampleAllowed: boolean;
 }
 
 function slugify(value: string): string {
@@ -74,6 +85,7 @@ function filenameFromDisposition(value: string | null): string | null {
 export function DictionaryBuilder() {
   const { locale, messages: m } = useLocale();
   const b = m.builder;
+  const paymentLink = process.env.NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL;
   const generationScopes = useMemo(
     () => getLocalizedGenerationScopes(locale),
     [locale],
@@ -100,6 +112,7 @@ export function DictionaryBuilder() {
 
   const [epubFileName, setEpubFileName] = useState<string | null>(null);
   const [epubChapters, setEpubChapters] = useState<EpubChapterOption[]>([]);
+  const [selectedChapterId, setSelectedChapterId] = useState("");
   const [bookProgress, setBookProgress] = useState<{
     current: number;
     total: number;
@@ -111,6 +124,14 @@ export function DictionaryBuilder() {
   const [showPasteText, setShowPasteText] = useState(false);
   const [apiPanelOpen, setApiPanelOpen] = useState(false);
   const [apiPanelHighlight, setApiPanelHighlight] = useState(false);
+  const [access, setAccess] = useState<AccessState>({
+    freeChapterRemaining: true,
+    paid: false,
+    sampleAllowed: true,
+  });
+  const [contentSource, setContentSource] = useState<"sample" | "epub" | "pasted">(
+    "pasted",
+  );
   const sampleLoadedFromUrlRef = useRef(false);
 
   const extractableChapters = useMemo(
@@ -124,6 +145,7 @@ export function DictionaryBuilder() {
         extractableChapters,
         generationScope,
         Number(customCharLimit) || 0,
+        selectedChapterId,
         locale,
       );
     }
@@ -139,6 +161,7 @@ export function DictionaryBuilder() {
         ],
         generationScope,
         Number(customCharLimit) || 0,
+        chapterId || "paste",
         locale,
       );
     }
@@ -156,6 +179,7 @@ export function DictionaryBuilder() {
     chapterLabel,
     generationScope,
     customCharLimit,
+    selectedChapterId,
     locale,
     b.scopeLabels.pastedText,
   ]);
@@ -168,6 +192,53 @@ export function DictionaryBuilder() {
   );
 
   const hasFullBook = extractableChapters.length > 0;
+  const trialMode =
+    contentSource === "sample"
+      ? "sample"
+      : access.paid
+        ? "paid"
+        : "free-chapter";
+
+  const limitError = useMemo(() => {
+    if (generationPlan.chapters.length === 0) return null;
+
+    if (!access.paid && hasFullBook && generationScope !== "selected-chapter") {
+      return b.errors.paidPlanRequired;
+    }
+
+    if (generationScope === "full-book") {
+      if (generationPlan.totalChars > MAX_FULL_BOOK_EXTRACT_CHARS) {
+        return formatMessage(b.errors.fullBookTooLargeChars, {
+          count: MAX_FULL_BOOK_EXTRACT_CHARS.toLocaleString(),
+        });
+      }
+
+      if (generationPlan.requestCount > MAX_FULL_BOOK_REQUESTS) {
+        return formatMessage(b.errors.fullBookTooLargeRequests, {
+          count: MAX_FULL_BOOK_REQUESTS,
+        });
+      }
+    }
+
+    if (!access.paid && !access.freeChapterRemaining && contentSource !== "sample") {
+      return b.errors.trialUsed;
+    }
+
+    return null;
+  }, [
+    access.freeChapterRemaining,
+    access.paid,
+    b.errors.fullBookTooLargeChars,
+    b.errors.fullBookTooLargeRequests,
+    b.errors.paidPlanRequired,
+    b.errors.trialUsed,
+    contentSource,
+    generationPlan.chapters.length,
+    generationPlan.requestCount,
+    generationPlan.totalChars,
+    generationScope,
+    hasFullBook,
+  ]);
 
   const scanPreviewText = useMemo(() => {
     if (generationPlan.chapters.length === 0) return "";
@@ -184,7 +255,7 @@ export function DictionaryBuilder() {
     ? userLlm.isConfigured
     : userLlm.isConfigured || serviceReady === true;
   const canGenerateContent =
-    generationPlan.chapters.length > 0 && (hasFullBook || canSubmit);
+    generationPlan.chapters.length > 0 && (hasFullBook || canSubmit) && !limitError;
 
   const ensureExtractReady = () => {
     if (canExtract) return true;
@@ -208,6 +279,11 @@ export function DictionaryBuilder() {
       setByokRequired(Boolean(data.beta?.byokRequired));
       setServiceReady(Boolean(data.ready));
       setMobiCompileReady(Boolean(data.features?.mobiCompile));
+      setAccess({
+        freeChapterRemaining: Boolean(data.access?.freeChapterRemaining ?? true),
+        paid: Boolean(data.access?.paid ?? false),
+        sampleAllowed: Boolean(data.access?.sampleAllowed ?? true),
+      });
     } catch {
       setServiceReady(false);
       setMobiCompileReady(false);
@@ -244,11 +320,16 @@ export function DictionaryBuilder() {
       const response = await fetch("/samples/acok-ch04.txt");
       if (!response.ok) throw new Error(b.errors.loadSample);
       const text = await response.text();
+      setEpubFileName(null);
+      setEpubChapters([]);
+      setSelectedChapterId("");
       setBookTitle("A Clash of Kings");
       setChapterLabel("Chapter 4 (Arya IV)");
       setChapterId("ak-ch04");
       setChapterText(text);
       setShowPasteText(true);
+      setContentSource("sample");
+      setGenerationScope("trial-15k");
     } catch (err) {
       setError(err instanceof Error ? err.message : b.errors.loadSampleFail);
     } finally {
@@ -274,6 +355,7 @@ export function DictionaryBuilder() {
     setLoadingMessage(b.readingEpub);
     setEpubFileName(file.name);
     setEpubChapters([]);
+    setChapterText("");
 
     try {
       let buffer: ArrayBuffer;
@@ -294,8 +376,11 @@ export function DictionaryBuilder() {
       );
 
       setEpubChapters(chapters);
+      setSelectedChapterId(chapters[0]?.id ?? "");
       if (parsed.title) setBookTitle(parsed.title);
       setShowPasteText(false);
+      setContentSource("epub");
+      if (!access.paid) setGenerationScope("selected-chapter");
     } catch (err) {
       const message = friendlyFetchError(
         err,
@@ -331,6 +416,8 @@ export function DictionaryBuilder() {
           bookTitle,
           chapterLabel: chapter.label,
           chapterId: chapter.id,
+          generationScope,
+          usageMode: trialMode,
           ...buildLlmPayload(userLlm.clientConfig),
         }),
       });
@@ -372,6 +459,7 @@ export function DictionaryBuilder() {
           book_title: bookTitle || b.myBook,
           chapter_label: scopeLabel,
         },
+        usageMode: trialMode,
       }),
     });
 
@@ -396,6 +484,7 @@ export function DictionaryBuilder() {
     anchor.click();
     URL.revokeObjectURL(url);
     setDownloadFormat(format);
+    await checkHealth();
   }
 
   async function handleGenerateDictionary() {
@@ -409,6 +498,11 @@ export function DictionaryBuilder() {
             : b.errors.noReadableChapters
           : b.errors.needText,
       );
+      return;
+    }
+
+    if (limitError) {
+      setError(limitError);
       return;
     }
 
@@ -495,6 +589,7 @@ export function DictionaryBuilder() {
             book_title: bookTitle || b.myBook,
             chapter_label: chapterLabel || b.chapter,
           },
+          usageMode: trialMode,
         }),
       });
 
@@ -521,6 +616,7 @@ export function DictionaryBuilder() {
       anchor.click();
       URL.revokeObjectURL(url);
       setDownloadFormat(format);
+      await checkHealth();
     } catch (err) {
       setError(err instanceof Error ? err.message : b.errors.generic);
     } finally {
@@ -553,6 +649,10 @@ export function DictionaryBuilder() {
 
         {error && <div className="builder-banner builder-banner-error">{error}</div>}
 
+        {!error && limitError && (
+          <div className="builder-banner builder-banner-warn">{limitError}</div>
+        )}
+
         {loading && bookProgress && (
           <div className="builder-progress">
             <div className="builder-progress-label">
@@ -580,6 +680,18 @@ export function DictionaryBuilder() {
         {downloadFormat && (
           <div className="builder-banner builder-banner-success">
             {downloadFormat === "mobi" ? b.downloadedMobi : b.downloadedZip}
+          </div>
+        )}
+
+        {!access.paid && (
+          <div className="builder-banner builder-banner-info">
+            {access.freeChapterRemaining ? b.freeChapterRemaining : b.freeChapterUsed}
+            {paymentLink ? (
+              <>
+                {" "}
+                <a href={paymentLink}>{b.buyAccess}</a>
+              </>
+            ) : null}
           </div>
         )}
 
@@ -638,7 +750,10 @@ export function DictionaryBuilder() {
                   <span>{b.chapterText}</span>
                   <textarea
                     value={chapterText}
-                    onChange={(event) => setChapterText(event.target.value)}
+                    onChange={(event) => {
+                      setChapterText(event.target.value);
+                      setContentSource("pasted");
+                    }}
                     rows={8}
                     placeholder={b.chapterPlaceholder}
                   />
@@ -675,6 +790,22 @@ export function DictionaryBuilder() {
                   ))}
                 </select>
               </label>
+
+              {hasFullBook && generationScope === "selected-chapter" && (
+                <label className="builder-field">
+                  <span>{b.selectedChapter}</span>
+                  <select
+                    value={selectedChapterId}
+                    onChange={(event) => setSelectedChapterId(event.target.value)}
+                  >
+                    {extractableChapters.map((chapter) => (
+                      <option key={chapter.id} value={chapter.id}>
+                        {chapter.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
 
               {generationScope === "custom-chars" && (
                 <label className="builder-field">

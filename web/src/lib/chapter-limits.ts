@@ -1,5 +1,7 @@
 /** Keep each /api/extract body under Vercel's ~4.5 MB request limit (with JSON overhead). */
 export const MAX_CHAPTER_EXTRACT_CHARS = 90_000;
+export const MAX_FULL_BOOK_EXTRACT_CHARS = 1_200_000;
+export const MAX_FULL_BOOK_REQUESTS = 30;
 
 export interface TextChunk {
   id: string;

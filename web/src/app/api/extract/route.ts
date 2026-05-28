@@ -2,12 +2,28 @@ import { NextResponse } from "next/server";
 
 import { extractEntries } from "@/lib/extract-entries";
 import type { ExtractRequest } from "@/lib/types";
+import { getTrialStateFromCookieHeader } from "@/lib/trial-access";
 
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ExtractRequest;
+    const access = getTrialStateFromCookieHeader(request.headers.get("cookie"));
+
+    if (body.usageMode !== "sample" && body.usageMode !== "paid") {
+      if (!access.freeChapterRemaining) {
+        throw new Error(
+          "Your free chapter has already been used. Purchase KindleDict to keep generating dictionaries.",
+        );
+      }
+      if (body.generationScope && body.generationScope !== "selected-chapter") {
+        throw new Error(
+          "Full-book and multi-chapter generation are part of the paid plan. Start with one free chapter, then purchase to keep going.",
+        );
+      }
+    }
+
     const entries = await extractEntries(body);
 
     return NextResponse.json({

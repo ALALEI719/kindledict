@@ -23,7 +23,7 @@ export const LLM_PRESETS: LlmPreset[] = [
   {
     id: "google",
     label: "Google Gemini",
-    description: "Free tier available. Best default for public beta.",
+    description: "Free tier available. Best default for hosted launch traffic.",
     provider: "google",
     model: "gemini-2.5-flash",
     baseUrl: "",

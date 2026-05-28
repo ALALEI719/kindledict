@@ -139,7 +139,7 @@ export function resolveLlmCredentials(
 
   if (isByokRequired()) {
     throw new Error(
-      "Public beta requires your own API key. Add one below — we do not store it on our servers.",
+      "This deployment requires your own API key. Add one below — we do not store it on our servers.",
     );
   }
 

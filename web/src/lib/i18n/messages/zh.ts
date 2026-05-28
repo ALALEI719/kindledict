@@ -34,7 +34,7 @@ export const zh = {
     heroSubBold: "定制 Kindle 词典",
     heroSubAfter:
       "。点人物名、地名和世界观术语，在词典弹窗里直接看释义，不用翻书后索引。",
-    heroCtaPrimary: "免费生成你的词典",
+    heroCtaPrimary: "生成你的词典",
     heroCtaSecondary: "了解怎么用",
     heroVisualLabel: "在 Kindle 上阅读时",
     heroDemoLine1: "……与",
@@ -141,22 +141,22 @@ export const zh = {
     demoSub:
       "不上传自己的书也可以体验完整流程：加载示例章节、生成词条、下载 Kindle 词典文件。",
     demoCta: "打开示例章节",
-    pricingTitle: "商业化验证价",
+    pricingTitle: "正式版价格",
     pricingSub:
-      "公测期先验证读者是否愿意为完整书籍生成付费，免费试用仍保留。",
+      "先用示例流程和 1 次免费章节试用确认效果，之后购买完整使用权限。",
     pricingPlans: [
       {
-        name: "章节试用",
+        name: "免费试用",
         price: "免费",
-        body: "适合确认识别质量和 Kindle 安装流程。",
+        body: "包含官方示例流程，以及你自己的 EPUB 1 次免费单章生成。",
         cta: "免费试用",
         href: "/app?sample=1",
       },
       {
-        name: "单本完整生成",
+        name: "读者版",
         price: "$3.99 / 本",
-        body: "面向愿意付费的重度读者；接入支付链接后可直接售卖。",
-        cta: "加入付费公测",
+        body: "用完免费章节后继续生成；适合多章或整书词典需求。",
+        cta: "购买权限",
         href: "/contact",
       },
       {
@@ -199,14 +199,14 @@ export const zh = {
       },
     ],
     ctaTitle: "别再翻索引了，直接点词。",
-    ctaSub: "免费上传章节，几分钟内下载 Kindle 可用的小说词典。",
-    ctaButton: "立即开始 — 免费",
-    ctaNote: "无需信用卡 · 无 DRM EPUB 或粘贴文本 · 仅供个人使用",
+    ctaSub: "先跑示例，再领取自己的 1 次免费章节，确认效果后再购买。",
+    ctaButton: "开始免费章节",
+    ctaNote: "已含托管 AI · 仅支持无 DRM EPUB · 仅供个人使用",
   },
   builder: {
-    publicBeta: "公测中",
+    publicBeta: "正式上线",
     title: "从电子书生成 Kindle 词典",
-    subtitle: "上传 EPUB、选择扫描范围，下载一本 Kindle 伴侣词典。",
+    subtitle: "先试官方示例，再用自己的 EPUB 免费生成 1 个章节；继续使用需购买。",
     step1Title: "1. 添加书籍文本",
     step1Hint: "上传无 DRM 的 EPUB（最大 15 MB），或粘贴章节文本。",
     loaded: "已加载",
@@ -220,6 +220,7 @@ export const zh = {
     bookTitle: "书名",
     bookTitlePlaceholder: "A Clash of Kings",
     howMuchScan: "扫描范围",
+    selectedChapter: "要生成的章节",
     charLimit: "字符上限",
     scanPreview:
       "待扫描文本（预览，切换上方选项会更新）",
@@ -252,7 +253,12 @@ export const zh = {
     downloadedZip:
       "ZIP 已下载 — 用 Kindle Previewer 3 打开 dict.opf → 导出 .mobi",
     downloadedMobi: ".mobi 已下载 — 复制到 Kindle 的 documents/dictionaries/ 后即可选择使用",
-    hostedAiReady: "托管 AI 已启用：本次生成不需要填写自己的 API Key。",
+    hostedAiReady: "托管 AI 已启用：当前生成不需要填写自己的 API Key。",
+    freeChapterRemaining:
+      "当前可用免费试用：官方示例不限次，你自己的 EPUB 还可免费生成 1 个章节。",
+    freeChapterUsed:
+      "你的免费章节已用完。继续为自己的书生成词典，请先购买权限。",
+    buyAccess: "购买权限",
     progressChapter: "第 {current} / {total} 章：",
     loadingSample: "正在加载示例章节……",
     readingEpub: "正在读取 EPUB……",
@@ -270,8 +276,14 @@ export const zh = {
       aiNotConfigured:
         "AI 提取尚未配置。请添加 API Key，或在服务端配置凭证。",
       customLimitMin: "自定义字符数至少为 100。",
+      fullBookTooLargeChars:
+        "当前整书扫描超过上线阶段限制。请控制在 {count} 字符以内，或先只生成单章。",
+      fullBookTooLargeRequests:
+        "这本书需要超过 {count} 次提取请求。建议先生成单章，或购买后再做多章/整书。",
       noReadableChapters: "该 EPUB 没有足够长的可读章节可供处理。",
       needText: "请上传 EPUB，或粘贴至少几段章节文本。",
+      paidPlanRequired:
+        "未购买用户当前仅可使用官方示例，以及你自己书籍的 1 个自选章节。多章和整书生成为付费功能。",
       noEntries: "所选范围内未提取到任何词条。",
       loadSample: "无法加载示例章节。",
       loadSampleFail: "加载示例失败。",
@@ -288,6 +300,8 @@ export const zh = {
       extractFail: "提取失败：{label}",
       buildFail: "打包失败。",
       generateFail: "词典生成失败。",
+      trialUsed:
+        "你的免费章节已经用完。继续生成 KindleDict 词典，请先购买权限。",
       generic: "出了点问题。",
     },
     scopes: {
@@ -299,6 +313,11 @@ export const zh = {
       "trial-30k": {
         label: "短样本 · 30,000 字符",
         description: "更长一点的试读，不会跑完整本书。",
+        estimatedRequests: "约 1 次请求",
+      },
+      "selected-chapter": {
+        label: "自选单章",
+        description: "从 EPUB 中挑选 1 个章节生成词典。",
         estimatedRequests: "约 1 次请求",
       },
       "first-chapter": {
@@ -389,7 +408,7 @@ export const zh = {
       process: {
         title: "我们如何处理内容",
         items: [
-          "公测期间，您在浏览器中提供自己的 AI 服务商 API Key。密钥保存在本地浏览器存储，仅在生成或测试词典时发送到我们的服务器。",
+          "若您选择自带 Key 模式，则需在浏览器中提供自己的 AI 服务商 API Key。密钥保存在本地浏览器存储，仅在生成或测试词典时发送到我们的服务器。",
           "书籍文本会发送到您选择的 AI 服务商（Gemini、DeepSeek、OpenAI 兼容网关等），用于提取人名、地名、书中术语并撰写释义。",
           "我们不会在请求结束后将 API Key 存入数据库，也不会用您的书籍或章节文本训练 AI 模型。",
           "生成的词典文件（HTML、OPF、ZIP 或 MOBI）通过浏览器返回或供您下载。",

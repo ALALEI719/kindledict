@@ -40,12 +40,15 @@ export interface ExtractRequest {
   chapterLabel?: string;
   chapterId?: string;
   spoilerScope?: string;
+  generationScope?: string;
+  usageMode?: "sample" | "free-chapter" | "paid";
   llm?: ClientLlmConfig;
 }
 
 export interface BuildRequest {
   entries: DictionaryEntry[];
   config: DictConfig;
+  usageMode?: "sample" | "free-chapter" | "paid";
   llm?: ClientLlmConfig;
 }
 

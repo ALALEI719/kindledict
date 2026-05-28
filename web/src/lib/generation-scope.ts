@@ -4,6 +4,7 @@ import { formatMessage, getMessages } from "@/lib/i18n/messages";
 export type GenerationScopeId =
   | "trial-15k"
   | "trial-30k"
+  | "selected-chapter"
   | "first-chapter"
   | "first-3-chapters"
   | "full-book"
@@ -27,6 +28,12 @@ export const GENERATION_SCOPES: GenerationScopeOption[] = [
     id: "trial-30k",
     label: "Short sample · 30,000 characters",
     description: "A longer taste of the book without running the full novel.",
+    estimatedRequests: "~1 request",
+  },
+  {
+    id: "selected-chapter",
+    label: "Selected chapter",
+    description: "Generate a dictionary from one chapter you choose.",
     estimatedRequests: "~1 request",
   },
   {
@@ -87,6 +94,7 @@ export function buildGenerationPlan<
   chapters: T[],
   scopeId: GenerationScopeId,
   customCharLimit?: number,
+  selectedChapterId?: string,
   locale: Locale = DEFAULT_LOCALE,
 ): GenerationPlan {
   const scopeLabels = getMessages(locale).builder.scopeLabels;
@@ -149,6 +157,17 @@ export function buildGenerationPlan<
 
   if (scopeId === "first-chapter") {
     const chapter = readable[0]!;
+    return {
+      chapters: [chapter],
+      totalChars: chapter.text.length,
+      scopeLabel: chapter.label,
+      requestCount: 1,
+    };
+  }
+
+  if (scopeId === "selected-chapter") {
+    const chapter =
+      readable.find((candidate) => candidate.id === selectedChapterId) ?? readable[0]!;
     return {
       chapters: [chapter],
       totalChars: chapter.text.length,

@@ -3,11 +3,13 @@ import { NextResponse } from "next/server";
 import { hasCompileWorker } from "@/lib/compile-worker";
 import { isByokRequired, resolveServerCredentials } from "@/lib/llm-credentials";
 import { LLM_PRESETS } from "@/lib/llm-presets";
+import { getTrialStateFromCookieHeader } from "@/lib/trial-access";
 
-export async function GET() {
+export async function GET(request: Request) {
   const server = resolveServerCredentials();
   const byokRequired = isByokRequired();
   const mobiCompile = hasCompileWorker();
+  const access = getTrialStateFromCookieHeader(request.headers.get("cookie"));
 
   return NextResponse.json({
     ok: true,
@@ -29,6 +31,7 @@ export async function GET() {
       mobiCompile,
       hostedAi: Boolean(server) && !byokRequired,
     },
+    access,
     llm: server && !byokRequired
       ? {
           provider: server.provider,
@@ -37,9 +40,9 @@ export async function GET() {
         }
       : null,
     message: byokRequired
-      ? "Public beta ready. Add your own API key to start generating dictionaries."
+      ? "Add your own API key to start generating dictionaries."
       : server
-        ? "Service ready."
+        ? "KindleDict is ready."
         : "Add your API key below, or configure server-side AI credentials.",
   });
 }

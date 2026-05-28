@@ -35,7 +35,7 @@ export const en = {
     heroSubBold: "custom Kindle dictionary",
     heroSubAfter:
       " from the book you're reading. Tap character names, places, and lore terms and get definitions right in the dictionary popup — without flipping to a glossary.",
-    heroCtaPrimary: "Build your fictionary — free",
+    heroCtaPrimary: "Build your fictionary",
     heroCtaSecondary: "See how it works",
     heroVisualLabel: "While reading on Kindle",
     heroDemoLine1: "…traveling north with ",
@@ -144,22 +144,22 @@ export const en = {
     demoSub:
       "Try KindleDict without uploading your own book: load the sample chapter, generate entries, and download the Kindle dictionary file.",
     demoCta: "Open sample chapter",
-    pricingTitle: "Paid beta validation",
+    pricingTitle: "Launch pricing",
     pricingSub:
-      "Keep the free trial, but make willingness to pay measurable before building heavier account and billing infrastructure.",
+      "Start with the sample and one free chapter. Purchase full access when you're ready to generate more.",
     pricingPlans: [
       {
-        name: "Chapter trial",
+        name: "Free trial",
         price: "Free",
-        body: "Best for checking extraction quality and the Kindle install flow.",
+        body: "Includes the hosted sample flow plus one free chapter from your own EPUB.",
         cta: "Try free",
         href: "/app?sample=1",
       },
       {
-        name: "Full-book generation",
+        name: "Reader access",
         price: "$3.99 / book",
-        body: "For serious readers; connect a payment link when you are ready to charge.",
-        cta: "Join paid beta",
+        body: "Unlock continued generation after your free chapter and move on to multi-chapter or full-book dictionaries.",
+        cta: "Buy access",
         href: "/contact",
       },
       {
@@ -202,15 +202,15 @@ export const en = {
       },
     ],
     ctaTitle: "Stop flipping to the glossary. Start tapping.",
-    ctaSub: "Upload a chapter free. Download a Kindle-ready fictionary in minutes.",
-    ctaButton: "Get started — it's free",
-    ctaNote: "No credit card · DRM-free EPUB or paste text · Personal use",
+    ctaSub: "Test the sample, claim one free chapter, then unlock full reading workflows.",
+    ctaButton: "Start your free chapter",
+    ctaNote: "Hosted AI included · DRM-free EPUB only · Personal use",
   },
   builder: {
-    publicBeta: "Public beta",
+    publicBeta: "Commercial launch",
     title: "Build a Kindle dictionary from your book",
     subtitle:
-      "Upload EPUB, choose how much to scan, and download one companion dictionary for Kindle.",
+      "Try the sample, generate one free chapter from your own EPUB, then purchase to keep going.",
     step1Title: "1. Add your book text",
     step1Hint: "Upload a DRM-free EPUB (max 15 MB) or paste chapter text.",
     loaded: "Loaded",
@@ -224,6 +224,7 @@ export const en = {
     bookTitle: "Book title",
     bookTitlePlaceholder: "A Clash of Kings",
     howMuchScan: "How much to scan",
+    selectedChapter: "Chapter to generate",
     charLimit: "Character limit",
     scanPreview: "Text to scan (preview — updates when you change the option above)",
     scanPreviewEmpty:
@@ -258,7 +259,12 @@ export const en = {
     downloadedMobi:
       "Downloaded .mobi — copy it to documents/dictionaries/ on your Kindle and select it as a dictionary",
     hostedAiReady:
-      "Hosted AI is enabled: you do not need to enter your own API key for this generation.",
+      "Hosted AI is enabled: you do not need to enter your own API key.",
+    freeChapterRemaining:
+      "Free trial available: generate the sample any time, plus one chapter from your own book before purchase.",
+    freeChapterUsed:
+      "Your free chapter has been used. Purchase access to keep generating from your own books.",
+    buyAccess: "Buy access",
     progressChapter: "Chapter {current} of {total}:",
     loadingSample: "Loading sample chapter…",
     readingEpub: "Reading EPUB…",
@@ -276,10 +282,16 @@ export const en = {
       aiNotConfigured:
         "AI extraction is not configured. Add an API key, or configure credentials on the server.",
       customLimitMin: "Custom limit must be at least 100 characters.",
+      fullBookTooLargeChars:
+        "This full-book scan is too large for the current launch limit. Keep it under {count} characters or choose one chapter.",
+      fullBookTooLargeRequests:
+        "This book would need more than {count} extraction passes. Choose one chapter now, or purchase and split the job later.",
       noReadableChapters:
         "This EPUB has no readable chapters long enough to process.",
       needText:
         "Upload an EPUB or paste at least a few paragraphs of chapter text.",
+      paidPlanRequired:
+        "Unpaid access currently includes the sample flow and one selected chapter from your own book. Purchase to unlock multi-chapter and full-book generation.",
       noEntries: "No dictionary entries were extracted from this selection.",
       loadSample: "Could not load sample chapter.",
       loadSampleFail: "Failed to load sample.",
@@ -296,6 +308,8 @@ export const en = {
       extractFail: "Extraction failed for {label}",
       buildFail: "Build failed.",
       generateFail: "Dictionary generation failed.",
+      trialUsed:
+        "Your free chapter has already been used. Purchase KindleDict to keep generating dictionaries.",
       generic: "Something went wrong.",
     },
     scopes: {
@@ -307,6 +321,11 @@ export const en = {
       "trial-30k": {
         label: "Short sample · 30,000 characters",
         description: "A longer taste of the book without running the full novel.",
+        estimatedRequests: "~1 request",
+      },
+      "selected-chapter": {
+        label: "Selected chapter",
+        description: "Pick one chapter from your EPUB and build a dictionary for it.",
         estimatedRequests: "~1 request",
       },
       "first-chapter": {
@@ -398,7 +417,7 @@ export const en = {
       process: {
         title: "How we process your content",
         items: [
-          "During the public beta, you provide your own AI provider API key in the browser. That key is saved locally in your browser storage and sent to our server only when you generate or test a dictionary.",
+          "If you choose bring-your-own-key mode, you provide your AI provider API key in the browser. That key is saved locally in your browser storage and sent to our server only when you generate or test a dictionary.",
           "Book text is sent to your chosen AI provider (Gemini, DeepSeek, OpenAI-compatible gateways, and similar services) to extract names, places, and book-specific terms and to write definitions.",
           "We do not store your API key in our database after the request finishes, and we do not use your books or chapter text to train AI models.",
           "Generated dictionary files (HTML, OPF, ZIP, or MOBI) are returned to you in the browser or as a download.",
