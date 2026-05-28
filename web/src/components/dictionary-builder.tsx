@@ -85,7 +85,7 @@ function filenameFromDisposition(value: string | null): string | null {
 export function DictionaryBuilder() {
   const { locale, messages: m } = useLocale();
   const b = m.builder;
-  const paymentLink = process.env.NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL;
+  const paymentLink = "/account";
   const generationScopes = useMemo(
     () => getLocalizedGenerationScopes(locale),
     [locale],

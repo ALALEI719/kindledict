@@ -1,6 +1,11 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 
-import { getSupabaseConfig, isSupabaseConfigured } from "./config";
+import {
+  getSupabaseAdminConfig,
+  getSupabaseConfig,
+  isSupabaseConfigured,
+} from "./config";
 
 export type CookieAdapter = {
   getAll: () => { name: string; value: string }[];
@@ -38,6 +43,17 @@ export function createSupabaseServerClient(cookieAdapter: CookieAdapter) {
       setAll(cookiesToSet) {
         cookieAdapter.setAll?.(cookiesToSet);
       },
+    },
+  });
+}
+
+export function createSupabaseAdminClient() {
+  const { url, serviceRoleKey } = getSupabaseAdminConfig();
+
+  return createClient(url, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
     },
   });
 }

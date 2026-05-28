@@ -416,6 +416,58 @@
   margin-bottom: 18px;
 }
 
+.landing .pricing-hero {
+  padding-bottom: 24px;
+}
+
+.landing .pricing-reassurance {
+  max-width: 760px;
+  margin: 0 auto;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.landing .pricing-section {
+  padding-top: 8px;
+}
+
+.landing .pricing-grid-expanded {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.landing .pricing-card-detailed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 28px;
+}
+
+.landing .pricing-card-detailed p {
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+.landing .pricing-card-featured {
+  border-color: rgba(196, 92, 38, 0.45);
+  box-shadow: 0 10px 32px rgba(196, 92, 38, 0.1);
+}
+
+.landing .pricing-list {
+  margin: 0 0 8px;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.landing .pricing-list li {
+  margin-bottom: 0.55rem;
+}
+
+.landing .pricing-page-actions {
+  margin-bottom: 0;
+}
+
 .landing .faq-item {
   border-bottom: 1px solid var(--border);
   padding: 20px 0;

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { LegalLayout } from "@/components/landing/legal-layout";
+import { isCreemCheckoutConfigured } from "@/lib/creem";
 import { getAccountAccessState } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -26,8 +27,10 @@ export default async function AccountPage({
   const params = await searchParams;
   const sent = params.sent === "1";
   const signedIn = params.signed_in === "1";
+  const checkout = typeof params.checkout === "string" ? params.checkout : null;
   const error = typeof params.error === "string" ? params.error : null;
   const paymentLink = process.env.NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL;
+  const creemConfigured = isCreemCheckoutConfigured();
 
   return (
     <LegalLayout title="Account">
@@ -52,6 +55,21 @@ export default async function AccountPage({
       ) : account.signedIn ? (
         <>
           {signedIn ? <p>Signed in successfully.</p> : null}
+          {checkout === "success" ? (
+            <p>
+              Payment finished and you have been sent back from checkout. If access
+              still shows as free trial below, wait a few seconds for the webhook
+              to sync and refresh this page.
+            </p>
+          ) : null}
+          {checkout === "already_active" ? <p>This account already has paid access.</p> : null}
+          {error === "signin_required" ? <p>Please sign in before starting checkout.</p> : null}
+          {error === "auth_not_configured" ? (
+            <p>Supabase auth is not configured yet, so checkout cannot be tied to an account.</p>
+          ) : null}
+          {error && error !== "signin_required" && error !== "auth_not_configured" ? (
+            <p>Checkout error: {error}</p>
+          ) : null}
           <p>
             Signed in as <strong>{account.email}</strong>.
           </p>
@@ -62,7 +80,7 @@ export default async function AccountPage({
           <p>
             {account.paid
               ? "Your account can generate beyond the free chapter limit."
-              : "This account has not been granted paid access yet. Use the checkout link below, then mark the account active in Supabase until a payment webhook is connected."}
+              : "This account has not been granted paid access yet. Start checkout below. Your payment will be matched back to this email and account."}
           </p>
           <div className="flex gap-3">
             <form action="/auth/logout" method="post">
@@ -70,7 +88,13 @@ export default async function AccountPage({
                 Sign out
               </button>
             </form>
-            {paymentLink ? (
+            {account.paid ? null : creemConfigured ? (
+              <form action="/api/creem/checkout" method="post">
+                <button type="submit" className="btn btn-primary">
+                  Buy access
+                </button>
+              </form>
+            ) : paymentLink ? (
               <a href={paymentLink} className="btn btn-primary">
                 Buy access
               </a>

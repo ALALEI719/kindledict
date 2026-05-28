@@ -24,14 +24,32 @@ Add when ready:
 KINDLE_DICT_TRIAL_SECRET=...
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
+CREEM_API_KEY=...
+CREEM_PRODUCT_ID=...
+CREEM_WEBHOOK_SECRET=...
+# Optional:
+# CREEM_API_BASE_URL=https://test-api.creem.io
+# CREEM_PLAN_SLUG=reader-access
 ```
 
 With Supabase configured, `/account` supports email magic-link sign-in and paid
 access can follow the user across browsers. Run
 [supabase/customer_access.sql](</Users/issuser/Library/Mobile%20Documents/com~apple~CloudDocs/KindleDict/supabase/customer_access.sql>)
-in your Supabase SQL editor, then mark paid users as `active` in
-`public.customer_access` until a payment webhook is connected.
+in your Supabase SQL editor.
+
+With Creem configured, `/account` starts an authenticated checkout flow that
+attaches the signed-in Supabase user id in `metadata.referenceId`, and
+`/api/creem/webhook` syncs successful payments back into
+`public.customer_access`.
+
+Create a webhook in Creem that points to:
+
+```bash
+https://your-domain/api/creem/webhook
+```
+
+and use the webhook secret from Creem as `CREEM_WEBHOOK_SECRET`.
 
 With `COMPILE_WORKER_URL` set, `/api/build` returns a Kindle `.mobi` file.
 Without it, the app falls back to a ZIP containing `dict.opf` and source HTML.

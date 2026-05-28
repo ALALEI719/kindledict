@@ -22,6 +22,9 @@ export const en = {
     homeTitle: "KindleDict — Custom Kindle dictionaries for your books",
     homeDescription:
       "Character names Kindle can't find? Upload EPUB and build a tap-to-define companion dictionary for your Kindle.",
+    pricingTitle: "Pricing — KindleDict",
+    pricingDescription:
+      "KindleDict pricing for readers, single-book generation, and author or publisher delivery.",
     appTitle: "Build Dictionary — KindleDict",
     appDescription:
       "Upload EPUB or paste a chapter to generate a Kindle-compatible companion dictionary.",
@@ -145,32 +148,6 @@ export const en = {
     demoSub:
       "Try KindleDict without uploading your own book: load the sample chapter, generate entries, and download the Kindle dictionary file.",
     demoCta: "Open sample chapter",
-    pricingTitle: "Launch pricing",
-    pricingSub:
-      "Start with the sample and one free chapter. Purchase full access when you're ready to generate more.",
-    pricingPlans: [
-      {
-        name: "Free trial",
-        price: "Free",
-        body: "Includes the hosted sample flow plus one free chapter from your own EPUB.",
-        cta: "Try free",
-        href: "/app?sample=1",
-      },
-      {
-        name: "Reader access",
-        price: "$3.99 / book",
-        body: "Unlock continued generation after your free chapter and move on to multi-chapter or full-book dictionaries.",
-        cta: "Buy access",
-        href: "/contact",
-      },
-      {
-        name: "Author / publisher",
-        price: "From $49",
-        body: "Create companion dictionaries for books you own or publish.",
-        cta: "Contact us",
-        href: "/contact",
-      },
-    ],
     faqTitle: "Frequently asked questions",
     faqs: [
       {
@@ -206,6 +183,97 @@ export const en = {
     ctaSub: "Test the sample, claim one free chapter, then unlock full reading workflows.",
     ctaButton: "Start your free chapter",
     ctaNote: "Hosted AI included · DRM-free EPUB only · Personal use",
+  },
+  pricingPage: {
+    badge: "Pricing",
+    title: "Simple pricing for readers first",
+    subtitle:
+      "Start with the sample and one free chapter. Pay only when you want full-book workflow for a real book.",
+    reassurance:
+      "No subscription required for the reader plan. Buy per book, keep regenerating that book as you refine the dictionary.",
+    plans: [
+      {
+        name: "Sample + 1 free chapter",
+        price: "Free",
+        body:
+          "Use the hosted sample as many times as you want, plus generate one chapter from your own EPUB to verify quality before paying.",
+        bullets: [
+          "Unlimited sample runs",
+          "One free chapter from your own EPUB",
+          "Best for first-time testing",
+        ],
+        cta: "Try free",
+        href: "/app?sample=1",
+      },
+      {
+        name: "Single book",
+        price: "$3.99 / book",
+        body:
+          "Unlock the complete workflow for one book, including multi-chapter and full-book generation within the current size limits.",
+        bullets: [
+          "Unlimited regenerations for one book",
+          "Multi-chapter and full-book generation",
+          "Best for individual readers",
+        ],
+        cta: "Buy single-book access",
+        href: "/account",
+      },
+      {
+        name: "Author / publisher",
+        price: "From $49",
+        body:
+          "Commercial delivery for books you own or publish, with clearer rights handling and hands-on support for release workflows.",
+        bullets: [
+          "Commercial use and delivery",
+          "Branded companion dictionary options",
+          "Batch or managed fulfillment support",
+        ],
+        cta: "Contact us",
+        href: "/contact",
+      },
+    ],
+    notesTitle: "Why it is priced this way",
+    notes: [
+      {
+        title: "Free is for evaluation, not loopholes",
+        body:
+          "You can validate the experience with a real chapter before paying, but continued generation is reserved for purchased access.",
+      },
+      {
+        title: "Per-book pricing matches the job to be done",
+        body:
+          "Most readers want a great dictionary for a specific book, not an always-on subscription they forget to cancel.",
+      },
+      {
+        title: "Commercial work is a different product",
+        body:
+          "Author and publisher requests usually involve rights, review, packaging, and delivery requirements beyond personal reading use.",
+      },
+    ],
+    faqTitle: "Pricing FAQ",
+    faqs: [
+      {
+        q: "If I buy one book, what exactly is unlocked?",
+        a: "You unlock continued generation for that book: regenerate entries, process multiple chapters, and use full-book generation as long as the EPUB fits current system limits.",
+      },
+      {
+        q: "Do I need a subscription?",
+        a: "No for the reader plan. The current default offer is pay per book.",
+      },
+      {
+        q: "Can I use one purchase for multiple books?",
+        a: "Not in the current reader plan. Each purchase is intended for one book project so costs stay aligned with usage.",
+      },
+      {
+        q: "Why is the author or publisher plan much higher?",
+        a: "That tier covers commercial usage, more coordination, and deliverables that go beyond a personal reading tool.",
+      },
+    ],
+    ctaTitle: "Try the free chapter first, then upgrade only if it works",
+    ctaBody:
+      "The product is easiest to understand by using it. Start with the sample or your own first chapter, then decide whether to unlock a full book.",
+    ctaPrimary: "Start free",
+    ctaSecondary: "Build a dictionary",
   },
   builder: {
     publicBeta: "Commercial launch",

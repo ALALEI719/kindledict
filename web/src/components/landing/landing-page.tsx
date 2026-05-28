@@ -20,7 +20,6 @@ function compareCell(
 export function LandingPage() {
   const { messages: m } = useLocale();
   const l = m.landing;
-  const paymentLink = process.env.NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL;
   const cmp = {
     yes: l.compareYes,
     no: l.compareNo,
@@ -38,7 +37,7 @@ export function LandingPage() {
           <div className="nav-links">
             <a href="#how-it-works">{m.common.howItWorks}</a>
             <a href="#features">{m.common.features}</a>
-            <a href="#pricing">{m.common.pricing}</a>
+            <Link href="/pricing">{m.common.pricing}</Link>
             <a href="#faq">{m.common.faq}</a>
             <Link href="/account">{m.common.account}</Link>
             <LanguageSwitcher />
@@ -187,35 +186,6 @@ export function LandingPage() {
           <Link href="/app?sample=1" className="btn btn-primary">
             {l.demoCta}
           </Link>
-        </div>
-      </section>
-
-      <section id="pricing">
-        <div className="container">
-          <h2>{l.pricingTitle}</h2>
-          <p className="section-sub">{l.pricingSub}</p>
-          <div className="pricing-grid">
-            {l.pricingPlans.map((plan, index) => {
-              const href = index === 1 && paymentLink ? paymentLink : plan.href;
-              const isExternal = href.startsWith("http");
-              return (
-                <div key={plan.name} className="pricing-card">
-                  <h3>{plan.name}</h3>
-                  <div className="pricing-price">{plan.price}</div>
-                  <p>{plan.body}</p>
-                  {isExternal ? (
-                    <a className="btn btn-secondary" href={href}>
-                      {plan.cta}
-                    </a>
-                  ) : (
-                    <Link className="btn btn-secondary" href={href}>
-                      {plan.cta}
-                    </Link>
-                  )}
-                </div>
-              );
-            })}
-          </div>
         </div>
       </section>
 

@@ -25,6 +25,7 @@ export function LegalLayout({
           </Link>
           <div className="nav-links">
             <Link href="/">{m.common.home}</Link>
+            <Link href="/pricing">{m.common.pricing}</Link>
             <Link href="/account">{m.common.account}</Link>
             <LanguageSwitcher />
             <Link href="/app" className="btn btn-primary">
