@@ -62,22 +62,39 @@ Set **Root Directory** to `web` if linking from repo root in Vercel dashboard.
 
 ### 3. Environment variables
 
-In [Vercel Dashboard](https://vercel.com/alalei719s-projects/kindledict) → Project → Settings → Environment Variables:
+In [Vercel Dashboard](https://vercel.com/alalei719s-projects/kindledict) → Project → Settings → Environment Variables.
 
-| Variable | Required | Notes |
-|----------|----------|-------|
-| `OPENAI_API_KEY` | Yes | For chapter extraction |
-| `OPENAI_CHAT_MODEL` | No | Default `gpt-4o-mini` |
-| `COMPILE_WORKER_URL` | No | Railway worker URL (Phase 2) |
-| `COMPILE_WORKER_SECRET` | No | Must match worker |
-| `KINDLE_DICT_BYOK_REQUIRED` | No | Set `false` for hosted AI generation; `true` for BYOK demos |
-| `NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL` | No | Paid beta checkout/payment link shown on pricing card |
+**Production (current on Vercel):**
 
-Or via CLI:
+| Variable | Required | Value / notes |
+|----------|----------|---------------|
+| `KINDLE_DICT_BYOK_REQUIRED` | Yes | `false` — hosted AI; users do not need their own API key |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Yes | Gemini key from Google AI Studio |
+| `LLM_PROVIDER` | No | Optional; omit or set `google` (auto-detected from Gemini key) |
+| `GOOGLE_CHAT_MODEL` | No | Optional; defaults to `gemini-2.5-flash` |
+
+**Optional (add when ready):**
+
+| Variable | Notes |
+|----------|-------|
+| `COMPILE_WORKER_URL` | Railway worker URL for direct `.mobi` download |
+| `COMPILE_WORKER_SECRET` | Must match worker |
+| `COMPILE_WORKER_FALLBACK_ZIP` | Default `true`; set `false` to fail instead of ZIP fallback |
+| `NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL` | Paid beta checkout link on homepage pricing card |
+
+Sync Vercel env to local dev (writes secrets to gitignored `.env.local`):
 
 ```bash
 cd web
-vercel env add OPENAI_API_KEY
+vercel link
+vercel env pull .env.local --environment=production --yes
+```
+
+Add or update a variable on Vercel:
+
+```bash
+cd web
+vercel env add GOOGLE_GENERATIVE_AI_API_KEY production
 ```
 
 ### 4. Deploy
@@ -102,7 +119,9 @@ Point `kindledict.com` to the Vercel project in Domains settings.
 ```bash
 cd web
 cp .env.example .env.local
-# Edit .env.local — add OPENAI_API_KEY
+# Option A: pull from Vercel (recommended when linked)
+vercel env pull .env.local --environment=production --yes
+# Option B: edit .env.local — add GOOGLE_GENERATIVE_AI_API_KEY
 
 npm run dev
 ```
@@ -112,7 +131,7 @@ Open https://kindledict.vercel.app or http://localhost:3000
 ## Important notes
 
 - **Vercel Pro recommended** for `/api/generate` — Hobby plan limits functions to 10s; LLM extraction needs up to 300s (Pro).
-- **Privacy**: Chapter text is sent to OpenAI for extraction; not persisted by this app.
+- **Privacy**: Chapter text is sent to your configured LLM provider for extraction; not persisted by this app.
 - **Copyright**: Personal study use only; no DRM bypass.
 
 ## CLI dictionary build (original)

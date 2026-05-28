@@ -27,15 +27,24 @@ Hosted demo uses **Bring Your Own Key**:
 3. Key stays in browser localStorage; requests send it only when generating
 4. You do **not** pay their AI usage
 
-### Vercel env for public beta
+### Vercel env — production (current)
+
+| Variable | Value |
+|----------|-------|
+| `KINDLE_DICT_BYOK_REQUIRED` | `false` |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini key (secret) |
+| `LLM_PROVIDER` | optional; auto-detects `google` from Gemini key |
+| `GOOGLE_CHAT_MODEL` | optional; defaults to `gemini-2.5-flash` |
+
+Redeploy after changing env vars. Sync docs locally with `vercel env pull .env.local --environment=production`.
+
+### Vercel env — BYOK demo mode (fallback)
 
 | Variable | Value |
 |----------|-------|
 | `KINDLE_DICT_BYOK_REQUIRED` | `true` |
 
-Do **not** set server-side `GOOGLE_GENERATIVE_AI_API_KEY` / `OPENAI_API_KEY` on the public beta project unless you want to subsidize usage.
-
-Redeploy after changing env vars.
+Do **not** set server-side `GOOGLE_GENERATIVE_AI_API_KEY` / `OPENAI_API_KEY` in BYOK mode unless you want to subsidize usage.
 
 ### Supported user providers
 

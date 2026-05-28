@@ -5,13 +5,19 @@ dictionary downloads.
 
 ## P0 Runtime
 
-Use this setup for the commercial beta path:
+Production on Vercel currently uses hosted Gemini generation:
 
 ```bash
 KINDLE_DICT_BYOK_REQUIRED=false
-LLM_PROVIDER=google
 GOOGLE_GENERATIVE_AI_API_KEY=...
-GOOGLE_CHAT_MODEL=gemini-2.5-flash
+# Optional — auto-detected when omitted:
+# LLM_PROVIDER=google
+# GOOGLE_CHAT_MODEL=gemini-2.5-flash
+```
+
+Add when ready:
+
+```bash
 COMPILE_WORKER_URL=...
 COMPILE_WORKER_SECRET=...
 NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL=...
@@ -20,10 +26,20 @@ NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL=...
 With `COMPILE_WORKER_URL` set, `/api/build` returns a Kindle `.mobi` file.
 Without it, the app falls back to a ZIP containing `dict.opf` and source HTML.
 
+## Sync env from Vercel
+
+```bash
+vercel link
+vercel env pull .env.local --environment=production --yes
+```
+
+This writes secrets to `.env.local` (gitignored). Use `.env.example` as the committed template for GitHub.
+
 ## Local Development
 
 ```bash
 npm install
+cp .env.example .env.local   # or vercel env pull (see above)
 npm run dev
 ```
 
