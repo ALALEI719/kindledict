@@ -34,10 +34,12 @@ Hosted demo uses **Bring Your Own Key**:
 | `KINDLE_DICT_BYOK_REQUIRED` | `false` |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini key (secret) |
 | `COMPILE_WORKER_URL` | Railway worker URL (secret; Production + Preview) |
+| `COMPILE_WORKER_SECRET` | Worker auth secret (Production + Preview) |
+| `COMPILE_WORKER_FALLBACK_ZIP` | ZIP fallback when worker fails (Production + Preview) |
 | `LLM_PROVIDER` | optional; auto-detects `google` from Gemini key |
 | `GOOGLE_CHAT_MODEL` | optional; defaults to `gemini-2.5-flash` |
 
-Still optional on Vercel: `COMPILE_WORKER_SECRET`, `NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL`.
+Still optional on Vercel: `NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL`.
 
 Redeploy after changing env vars. Sync docs locally with `vercel env pull .env.local --environment=production`.
 
