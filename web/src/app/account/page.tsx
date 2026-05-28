@@ -1,0 +1,115 @@
+import { cookies } from "next/headers";
+import type { Metadata } from "next";
+import Link from "next/link";
+
+import { LegalLayout } from "@/components/landing/legal-layout";
+import { getAccountAccessState } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Account — KindleDict",
+  description: "Sign in to KindleDict and manage your purchased reading access.",
+};
+
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const cookieStore = await cookies();
+  const account = await getAccountAccessState({
+    getAll() {
+      return cookieStore.getAll().map(({ name, value }) => ({ name, value }));
+    },
+  });
+  const params = await searchParams;
+  const sent = params.sent === "1";
+  const signedIn = params.signed_in === "1";
+  const error = typeof params.error === "string" ? params.error : null;
+  const paymentLink = process.env.NEXT_PUBLIC_KINDLE_DICT_PAYMENT_LINK_URL;
+
+  return (
+    <LegalLayout title="Account">
+      {!account.configured ? (
+        <>
+          <p>
+            Supabase auth is not configured yet. Add
+            {" "}
+            <code>NEXT_PUBLIC_SUPABASE_URL</code>
+            {" "}
+            and
+            {" "}
+            <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>
+            {" "}
+            to enable registration and sign-in.
+          </p>
+          <p>
+            Until then, KindleDict can still enforce the free chapter limit with
+            signed cookies, but paid access will need manual support.
+          </p>
+        </>
+      ) : account.signedIn ? (
+        <>
+          {signedIn ? <p>Signed in successfully.</p> : null}
+          <p>
+            Signed in as <strong>{account.email}</strong>.
+          </p>
+          <p>
+            Access status: <strong>{account.paid ? "Paid" : "Free trial only"}</strong>
+            {account.planSlug ? <> · plan: <code>{account.planSlug}</code></> : null}
+          </p>
+          <p>
+            {account.paid
+              ? "Your account can generate beyond the free chapter limit."
+              : "This account has not been granted paid access yet. Use the checkout link below, then mark the account active in Supabase until a payment webhook is connected."}
+          </p>
+          <div className="flex gap-3">
+            <form action="/auth/logout" method="post">
+              <button type="submit" className="btn btn-secondary">
+                Sign out
+              </button>
+            </form>
+            {paymentLink ? (
+              <a href={paymentLink} className="btn btn-primary">
+                Buy access
+              </a>
+            ) : (
+              <Link href="/contact" className="btn btn-primary">
+                Contact for access
+              </Link>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <p>
+            Create an account with email magic link login. After purchase, your
+            access can follow you across devices instead of relying on browser cookies.
+          </p>
+          {sent ? <p>Magic link sent. Check your inbox and open it in this browser.</p> : null}
+          {error ? <p>Sign-in error: {error}</p> : null}
+          <form action="/auth/login" method="post" className="flex max-w-md flex-col gap-3">
+            <label>
+              Email
+              <input
+                type="email"
+                name="email"
+                required
+                className="mt-2 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2"
+                placeholder="reader@example.com"
+              />
+            </label>
+            <input type="hidden" name="next" value="/account" />
+            <button type="submit" className="btn btn-primary">
+              Send magic link
+            </button>
+          </form>
+          <p>
+            After signing in, return to the builder at <Link href="/app">/app</Link>.
+          </p>
+        </>
+      )}
+    </LegalLayout>
+  );
+}
