@@ -17,7 +17,6 @@ echo "==> Pushing to origin..."
 git push origin HEAD
 
 echo "==> Deploying to Vercel (production)..."
-cd web
 vercel deploy --prod --yes
 
 echo "==> Done."

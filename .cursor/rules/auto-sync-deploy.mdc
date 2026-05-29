@@ -10,9 +10,9 @@ When you finish a meaningful code change in this repo (feature, fix, or refactor
 1. Run `git status` and confirm there are changes worth shipping.
 2. Commit with a clear message (do not commit `.env`, secrets, or credentials).
 3. Push to `origin` on the current branch (usually `main`).
-4. Deploy production from the `web/` directory:
+4. Deploy production from the **repository root** (Vercel Root Directory is `web/`):
    ```bash
-   cd web && vercel deploy --prod --yes
+   vercel deploy --prod --yes
    ```
    Or run the helper script from repo root:
    ```bash
