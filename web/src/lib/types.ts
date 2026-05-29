@@ -23,6 +23,7 @@ export interface DictConfig {
   language_out?: string;
   book_title?: string;
   chapter_label?: string;
+  dictionary_id?: string;
   usage_notes?: string[];
 }
 

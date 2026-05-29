@@ -20,13 +20,31 @@ const CONTENT_HEADER = `<!DOCTYPE html>
   </style>
 </head>
 <body>
-  <mbp:frameset>
 `;
 
-const CONTENT_FOOTER = `  </mbp:frameset>
-</body>
+const CONTENT_FOOTER = `</body>
 </html>
 `;
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 24);
+}
+
+/** Short prefix kept within kindle's ~31-char internal dictionary name limit. */
+export function buildDictionaryTitle(bookTitle: string, chapterLabel: string): string {
+  const tag = slugify(chapterLabel).slice(0, 12) || "dict";
+  return `[${tag}] ${bookTitle.trim()} Dictionary`;
+}
+
+export function buildDictionaryIdentifier(bookTitle: string, chapterLabel: string): string {
+  const bookSlug = slugify(bookTitle).slice(0, 16) || "book";
+  const chapterSlug = slugify(chapterLabel).slice(0, 16) || "chapter";
+  return `kindledict-${bookSlug}-${chapterSlug}`;
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -159,6 +177,11 @@ function renderOpf(config: DictConfig): string {
   const creator = escapeHtml(config.creator ?? "KindleDict");
   const languageIn = escapeHtml(config.language_in ?? "en-us");
   const languageOut = escapeHtml(config.language_out ?? "en-us");
+  const bookTitle = config.book_title?.trim() || "book";
+  const chapterLabel = config.chapter_label?.trim() || "chapter";
+  const identifier = escapeHtml(
+    config.dictionary_id ?? buildDictionaryIdentifier(bookTitle, chapterLabel),
+  );
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <package version="2.0"
@@ -170,7 +193,7 @@ function renderOpf(config: DictConfig): string {
     <dc:title>${title}</dc:title>
     <dc:creator opf:role="aut">${creator}</dc:creator>
     <dc:language>${languageIn}</dc:language>
-    <dc:identifier id="BookId">kindledict-${languageIn}-companion</dc:identifier>
+    <dc:identifier id="BookId">${identifier}</dc:identifier>
     <x-metadata>
       <DictionaryInLanguage>${languageIn}</DictionaryInLanguage>
       <DictionaryOutLanguage>${languageOut}</DictionaryOutLanguage>
@@ -221,12 +244,13 @@ export function defaultConfigFromRequest(input: {
   const chapterLabel = input.chapterLabel?.trim() || "Chapter 1";
 
   return {
-    title: `${bookTitle} — ${chapterLabel} Companion Dictionary`,
+    title: buildDictionaryTitle(bookTitle, chapterLabel),
     creator: "KindleDict",
     language_in: "en-us",
     language_out: "en-us",
     book_title: bookTitle,
     chapter_label: chapterLabel,
+    dictionary_id: buildDictionaryIdentifier(bookTitle, chapterLabel),
     usage_notes: [
       "Long-press a word while reading, or select text and tap Dictionary.",
       "If another dictionary opens first, tap its name in the popup and switch to this one.",

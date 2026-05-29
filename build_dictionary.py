@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -38,14 +39,27 @@ CONTENT_HEADER = """\
   </style>
 </head>
 <body>
-  <mbp:frameset>
 """
 
 CONTENT_FOOTER = """\
-  </mbp:frameset>
 </body>
 </html>
 """
+
+
+def slugify(value: str) -> str:
+    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", value.lower())).strip("-")[:24]
+
+
+def build_dictionary_title(book_title: str, chapter_label: str) -> str:
+    tag = slugify(chapter_label)[:12] or "dict"
+    return f"[{tag}] {book_title.strip()} Dictionary"
+
+
+def build_dictionary_identifier(book_title: str, chapter_label: str) -> str:
+    book_slug = slugify(book_title)[:16] or "book"
+    chapter_slug = slugify(chapter_label)[:16] or "chapter"
+    return f"kindledict-{book_slug}-{chapter_slug}"
 
 
 def load_json(path: Path) -> dict:
@@ -173,6 +187,12 @@ def render_opf(config: dict) -> str:
     creator = html.escape(config.get("creator", "KindleDict"))
     language_in = html.escape(config.get("language_in", "en-us"))
     language_out = html.escape(config.get("language_out", "en-us"))
+    book_title = config.get("book_title", "book").strip() or "book"
+    chapter_label = config.get("chapter_label", "chapter").strip() or "chapter"
+    identifier = html.escape(
+        config.get("dictionary_id")
+        or build_dictionary_identifier(book_title, chapter_label)
+    )
     return f"""\
 <?xml version="1.0" encoding="UTF-8"?>
 <package version="2.0"
@@ -184,7 +204,7 @@ def render_opf(config: dict) -> str:
     <dc:title>{title}</dc:title>
     <dc:creator opf:role="aut">{creator}</dc:creator>
     <dc:language>{language_in}</dc:language>
-    <dc:identifier id="BookId">kindledict-{language_in}-companion</dc:identifier>
+    <dc:identifier id="BookId">{identifier}</dc:identifier>
     <x-metadata>
       <DictionaryInLanguage>{language_in}</DictionaryInLanguage>
       <DictionaryOutLanguage>{language_out}</DictionaryOutLanguage>
