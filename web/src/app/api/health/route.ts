@@ -16,9 +16,18 @@ export async function GET(request: Request) {
     await getAccountAccessStateFromCookieHeader(cookieHeader),
   );
 
+  const accountState = await getAccountAccessStateFromCookieHeader(cookieHeader);
+
   return NextResponse.json({
     ok: true,
     ready: Boolean(server) && !byokRequired,
+    account: {
+      configured: accountState.configured,
+      signedIn: accountState.signedIn,
+      email: accountState.email,
+      paid: accountState.paid,
+      planSlug: accountState.planSlug,
+    },
     beta: {
       byokRequired,
       presets: LLM_PRESETS.map((preset) => ({

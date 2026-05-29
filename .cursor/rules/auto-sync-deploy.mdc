@@ -1,0 +1,24 @@
+---
+description: After code updates, sync to GitHub and deploy to Vercel production automatically.
+alwaysApply: true
+---
+
+# Auto sync & deploy
+
+When you finish a meaningful code change in this repo (feature, fix, or refactor — not question-only replies):
+
+1. Run `git status` and confirm there are changes worth shipping.
+2. Commit with a clear message (do not commit `.env`, secrets, or credentials).
+3. Push to `origin` on the current branch (usually `main`).
+4. Deploy production from the `web/` directory:
+   ```bash
+   cd web && vercel deploy --prod --yes
+   ```
+   Or run the helper script from repo root:
+   ```bash
+   bash scripts/sync-and-deploy.sh "your commit message"
+   ```
+
+If push alone is enough because Vercel Git integration is connected, still run `vercel deploy --prod --yes` when the user asks to deploy or when this rule applies after a completed update.
+
+Report the commit hash and production URL when done.

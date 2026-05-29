@@ -21,7 +21,8 @@ import {
 } from "@/lib/chapter-limits";
 import { MAX_EPUB_BYTES, parseEpubBuffer } from "@/lib/parse-epub";
 import { ApiKeyPanel } from "@/components/api-key-panel";
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { useAuth } from "@/components/auth-provider";
+import { LandingNav } from "@/components/landing-nav";
 import { useLocale } from "@/components/locale-provider";
 import { useUserLlm } from "@/hooks/use-user-llm";
 import { buildLocalizedScanPreviewText } from "@/lib/i18n/scan-preview";
@@ -84,8 +85,8 @@ function filenameFromDisposition(value: string | null): string | null {
 
 export function DictionaryBuilder() {
   const { locale, messages: m } = useLocale();
+  const { session, openAuthModal } = useAuth();
   const b = m.builder;
-  const paymentLink = "/account";
   const generationScopes = useMemo(
     () => getLocalizedGenerationScopes(locale),
     [locale],
@@ -627,19 +628,7 @@ export function DictionaryBuilder() {
 
   return (
     <div className="landing builder-page">
-      <nav>
-        <div className="container nav-inner">
-          <Link href="/" className="logo">
-            Kindle<span>Dict</span>
-          </Link>
-          <div className="nav-links">
-            <Link href="/">{m.common.home}</Link>
-            <Link href="/account">{m.common.account}</Link>
-            <Link href="/privacy">{m.common.privacy}</Link>
-            <LanguageSwitcher />
-          </div>
-        </div>
-      </nav>
+      <LandingNav variant="builder" />
 
       <main className="container builder-main">
         <div className="builder-header">
@@ -686,13 +675,18 @@ export function DictionaryBuilder() {
 
         {!access.paid && (
           <div className="builder-banner builder-banner-info">
-            {access.freeChapterRemaining ? b.freeChapterRemaining : b.freeChapterUsed}
-            {paymentLink ? (
-              <>
-                {" "}
-                <a href={paymentLink}>{b.buyAccess}</a>
-              </>
-            ) : null}
+            {access.freeChapterRemaining ? b.freeChapterRemaining : b.freeChapterUsed}{" "}
+            {session.signedIn ? (
+              <Link href="/dashboard">{b.buyAccess}</Link>
+            ) : (
+              <button
+                type="button"
+                className="builder-inline-link"
+                onClick={() => openAuthModal("login")}
+              >
+                {b.buyAccess}
+              </button>
+            )}
           </div>
         )}
 

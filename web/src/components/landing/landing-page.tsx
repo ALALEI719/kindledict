@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { LandingNav } from "@/components/landing-nav";
 import { useLocale } from "@/components/locale-provider";
 
 import "./landing.css";
@@ -29,24 +29,7 @@ export function LandingPage() {
 
   return (
     <div className="landing">
-      <nav>
-        <div className="container nav-inner">
-          <Link href="/" className="logo">
-            Kindle<span>Dict</span>
-          </Link>
-          <div className="nav-links">
-            <a href="#how-it-works">{m.common.howItWorks}</a>
-            <a href="#features">{m.common.features}</a>
-            <Link href="/pricing">{m.common.pricing}</Link>
-            <a href="#faq">{m.common.faq}</a>
-            <Link href="/account">{m.common.account}</Link>
-            <LanguageSwitcher />
-            <Link href="/app" className="btn btn-primary">
-              {m.common.tryFree}
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <LandingNav variant="marketing" />
 
       <header className="hero container">
         <div className="hero-badge">{l.heroBadge}</div>

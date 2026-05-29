@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
+import type { EmailOtpType } from "@supabase/supabase-js";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const next = url.searchParams.get("next") || "/account";
+  const next = url.searchParams.get("next") || "/dashboard";
   const redirectUrl = new URL(next, request.url);
   const response = NextResponse.redirect(redirectUrl);
 
@@ -30,8 +31,19 @@ export async function GET(request: Request) {
     },
   });
 
+  const tokenHash = url.searchParams.get("token_hash");
+  const typeParam = url.searchParams.get("type");
   const code = url.searchParams.get("code");
-  if (code) {
+  if (tokenHash && typeParam) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: typeParam as EmailOtpType,
+    });
+    if (error) {
+      redirectUrl.searchParams.set("error", error.message);
+      return NextResponse.redirect(redirectUrl);
+    }
+  } else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       redirectUrl.searchParams.set("error", error.message);

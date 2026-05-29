@@ -26,6 +26,9 @@ export async function POST(request: Request) {
 
   if (!email) return fail("missing-email");
   if (!password) return fail("missing-password");
+  if (password.length < 8) {
+    return fail("Password must be at least 8 characters.");
+  }
 
   const supabase = createSupabaseServerClient({
     getAll() {
@@ -34,17 +37,32 @@ export async function POST(request: Request) {
     setAll: cookieJar.setAll,
   });
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const origin = new URL(request.url).origin;
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
+    },
   });
 
   if (error) return fail(error.message);
 
-  if (wantsJson) {
-    return authJsonResponse({ ok: true, redirect: next }, cookieJar);
+  if (data.session) {
+    if (wantsJson) {
+      return authJsonResponse({ ok: true, redirect: next }, cookieJar);
+    }
+    redirectUrl.searchParams.set("signed_in", "1");
+    return cookieJar.applyTo(NextResponse.redirect(redirectUrl));
   }
 
-  redirectUrl.searchParams.set("signed_in", "1");
+  if (wantsJson) {
+    return authJsonResponse(
+      { ok: true, registered: true, message: "registered" },
+      cookieJar,
+    );
+  }
+
+  redirectUrl.searchParams.set("registered", "1");
   return cookieJar.applyTo(NextResponse.redirect(redirectUrl));
 }

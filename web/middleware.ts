@@ -4,6 +4,12 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname === "/account") {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/dashboard";
+    return NextResponse.redirect(redirectUrl);
+  }
+
   const response = NextResponse.next();
 
   if (!isSupabaseConfigured()) {
@@ -26,5 +32,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/account", "/app", "/auth/:path*"],
+  matcher: ["/account", "/dashboard", "/app", "/auth/:path*"],
 };

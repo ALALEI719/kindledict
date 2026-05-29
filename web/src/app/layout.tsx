@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 
+import { AuthProvider } from "@/components/auth-provider";
 import { LocaleProvider } from "@/components/locale-provider";
 import { zh } from "@/lib/i18n/messages/zh";
 
@@ -30,7 +32,11 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="min-h-screen antialiased">
-        <LocaleProvider>{children}</LocaleProvider>
+        <LocaleProvider>
+          <Suspense fallback={null}>
+            <AuthProvider>{children}</AuthProvider>
+          </Suspense>
+        </LocaleProvider>
       </body>
     </html>
   );

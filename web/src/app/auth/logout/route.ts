@@ -1,33 +1,29 @@
 import { NextResponse } from "next/server";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  authJsonResponse,
+  createAuthCookieJar,
+  wantsJsonAuthResponse,
+} from "@/lib/auth-response";
+import { createSupabaseServerClient, parseCookieHeader } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  const redirectUrl = new URL("/account", request.url);
-  const response = NextResponse.redirect(redirectUrl);
+  const wantsJson = wantsJsonAuthResponse(request);
+  const redirectUrl = new URL("/", request.url);
+  const cookieJar = createAuthCookieJar();
 
   const supabase = createSupabaseServerClient({
     getAll() {
-      return request.headers
-        .get("cookie")
-        ?.split(";")
-        .map((chunk) => chunk.trim())
-        .filter(Boolean)
-        .map((chunk) => {
-          const index = chunk.indexOf("=");
-          return {
-            name: chunk.slice(0, index),
-            value: chunk.slice(index + 1),
-          };
-        }) ?? [];
+      return parseCookieHeader(request.headers.get("cookie"));
     },
-    setAll(cookiesToSet) {
-      for (const cookie of cookiesToSet) {
-        response.cookies.set(cookie.name, cookie.value, cookie.options);
-      }
-    },
+    setAll: cookieJar.setAll,
   });
 
   await supabase.auth.signOut();
-  return response;
+
+  if (wantsJson) {
+    return authJsonResponse({ ok: true }, cookieJar);
+  }
+
+  return cookieJar.applyTo(NextResponse.redirect(redirectUrl));
 }

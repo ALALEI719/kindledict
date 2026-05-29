@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const origin = new URL(request.url).origin;
-  const accountUrl = new URL("/account", origin);
+  const accountUrl = new URL("/dashboard", origin);
   const cookieHeader = request.headers.get("cookie");
   const account = await getAccountAccessStateFromCookieHeader(cookieHeader);
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const successUrl = new URL("/account", origin);
+    const successUrl = new URL("/dashboard", origin);
     successUrl.searchParams.set("checkout", "success");
 
     const { checkoutUrl } = await createCreemCheckoutSession({
