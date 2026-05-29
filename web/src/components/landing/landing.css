@@ -856,7 +856,16 @@
   border-radius: 18px;
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.auth-modal *,
+.auth-modal *::before,
+.auth-modal *::after {
+  box-sizing: border-box;
 }
 
 .auth-modal-close {
@@ -885,7 +894,7 @@
 
 .auth-modal h2 {
   margin: 0 0 8px;
-  font-family: var(--serif);
+  font-family: Georgia, "Times New Roman", serif;
   font-size: 1.85rem;
   line-height: 1.15;
 }
@@ -897,12 +906,70 @@
 }
 
 .auth-modal-form {
+  display: flex;
+  flex-direction: column;
   margin-bottom: 14px;
+}
+
+.auth-modal .account-field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.auth-modal .account-field span {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.auth-modal .account-field input {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font: inherit;
+  background: #fff;
+  color: var(--text);
+}
+
+.auth-modal .account-field input:focus {
+  outline: none;
+  border-color: rgba(196, 92, 38, 0.55);
+  box-shadow: 0 0 0 3px rgba(196, 92, 38, 0.12);
+}
+
+.auth-modal .btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.1s;
+  cursor: pointer;
+  border: none;
+}
+
+.auth-modal .btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.auth-modal .btn-primary:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+
+.auth-modal .btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .auth-modal-submit {
   width: 100%;
-  justify-content: center;
+  margin-top: 6px;
+  text-align: center;
 }
 
 .auth-modal-banner {

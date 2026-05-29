@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/components/locale-provider";
 import { formatAccountError } from "@/lib/account-errors";
 
+import "@/components/landing/landing.css";
+
 export type AuthMode = "login" | "register";
 
 interface AuthModalProps {
